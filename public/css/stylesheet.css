@@ -1,0 +1,373 @@
+body {
+  /*background-color: #ddd;*/
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+.btn-play,
+.btn-settings,
+.btn-play {
+    width: 85%;
+    float: left;
+}
+.btn-settings {
+    width: 13%;
+    float: right;
+}
+
+
+
+#nick {
+    width: 65%;
+    float: left;
+}
+#startBox {
+    width: 450px;
+    background-color: #FFFFFF;
+    margin: 10px auto;
+    border-radius: 15px;
+    padding: 5px 15px 5px 15px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+/*.adsbygoogle > ins {
+	z-index: 1060;
+}*/
+
+/*.adslot_1 {
+	width: 320px; height: 100px;
+}
+@media (min-width:500px) {
+	.adslot_1 {
+		width: 468px;
+		height: 60px;
+	}
+}
+@media (min-width:800px) {
+	.adslot_1 {
+		width: 728px;
+		height: 90px;
+	}
+}*/
+
+#adsSection1 {
+	position: absolute;
+	width: 15%;
+	height: 80%;
+	/*background-color: #FFFFFF;*/
+	z-index: 1060;
+	left: 2%;
+	top: 10%;
+}
+
+#adsSection1 * {
+	z-index: 1060;
+}
+
+
+
+#instructions {
+	font-size: 10px;
+	padding: 0;
+	/*height: 300px;
+	padding: 0;
+	margin: 0;*/
+}
+
+/* SCROLL BAR */
+::-webkit-scrollbar {
+    width: 12px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: rgba(140,140,140,0.8); 
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+::-webkit-scrollbar-thumb:window-inactive {
+	background: rgba(140,140,140,0.4); 
+}
+/* END OF SCROLL BAR */
+
+#info {
+	font-size: 12px;
+	overflow-y: auto;
+	height: 300px;
+
+}
+
+#info ul, ol {
+	list-style: initial;
+}
+
+#info li {
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+#controls {
+	text-align: left;
+	border: 1px solid red;
+	width: 60%;
+	height: 100px;
+	margin: auto;
+	margin-left: 40%;
+	margin-bottom: 0;
+	padding: auto;
+	padding-left: auto;
+}
+
+#warning {
+	text-align: center;
+	padding: 0;
+}
+
+#messages {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+#messages li {
+	opacity: .9;
+	padding: 5px 10px;
+}
+#messages li:nth-child(odd) {
+	background-color: #4c4c4c;
+	color: #ffffff;
+}
+#messages li:nth-child(even) {
+	background-color: #707070;
+	color: #ffffff;
+}
+div.chat {
+	position: absolute;
+	top: 0;
+	right: 0px;
+	min-width: 250px;
+	width: 18%;
+	height: 30%;
+}
+ul#messages {
+	overflow: auto;
+	height: 95%;
+}
+input#msgIn {
+	position: absolute;
+	bottom: 0px;
+	width: 66.66%;
+}
+button#send {
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
+	width: 33.33%;
+}
+
+
+#hudButtons {
+	position: absolute;
+	top: 30%;
+	right: 0px;
+	min-width: 250px;
+	width: 18%;
+	height: 30%;
+}
+
+button#jumpButton {
+	position: absolute;
+	bottom: 30%;
+	right: 80px;
+	float: right;
+	display: inline-block;
+	z-index: 9;
+}
+
+button#shootButton {
+	position: absolute;
+	bottom: 30%;
+	right: 0px;
+	float: right;
+	display: inline-block;
+	z-index: 9;
+}
+
+button#fireballButton {
+	position: absolute;
+	bottom: 10%;
+	right: 0px;
+	float: right;
+	display: inline-block;
+	z-index: 9;
+}
+
+
+#keyboardLayoutConfig {
+	margin-top: 5px;
+	margin-left: 5px;
+	border: 1px solid red;
+	width: 40%;
+	height: 50%;
+	/*display: inline-block;
+	text-align: right;*/
+	/*position: fixed;*/
+	/*top: 10px;
+	left: 10px;*/
+}
+
+.actionText {
+	width: 50%;
+	/*left: 0;
+	margin: 5px 0;*/
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: 10px;
+	background-color: #888;
+	text-align: center;
+	display: inline-block;
+	vertical-align: middle;
+	line-height: 50px;
+	font-weight: bold;
+	/*font-size: 20px;*/
+	color: #333;
+}
+
+.buttonConfig {
+	float: right;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-right: 10px;
+	/*right: 0;
+	position: absolute;
+	margin: 5px 0;*/
+	height: 50px;
+	width: 50px;
+	background-color: #888;
+	text-align: center;
+	display: inline-block;
+	vertical-align: middle;
+	line-height: 50px;
+	font-weight: bold;
+	/*font-size: 20px;*/
+	color: #333;
+}
+
+
+
+
+
+
+/* FORMS ------------------ */
+/*.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: normal;
+}
+.form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+
+
+
+
+.form-signup {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signup .form-signup-heading,
+.form-signup .checkbox {
+  margin-bottom: 10px;
+}
+.form-signup .checkbox {
+  font-weight: normal;
+}
+.form-signup .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signup .form-control:focus {
+  z-index: 2;
+}
+.form-signup input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signup input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}*/
+/* FORMS ------------------ */
+
+
+
+.radio-thumbnail > input {
+  display: none;
+}
+
+.radio-thumbnail > :checked + .thumbnail {
+  border-color: #66afe9;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+}
+
+.radio-thumbnail > :disabled + .thumbnail {
+  opacity: .5;
+}

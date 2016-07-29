@@ -1,0 +1,8 @@
+hover text
+inventory
+combat
+add cooldown buttons/countdown timers
+
+combat
+zones
+friend system

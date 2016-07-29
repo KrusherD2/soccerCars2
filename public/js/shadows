@@ -1,0 +1,24 @@
+world1.t.renderer.shadowMap.enabled = true;
+world1.t.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+world1.t.renderer.gammaInput = true;
+world1.t.renderer.gammaOutput = true;
+world1.t.renderer.antialias = true;
+
+world1.t.scene.children[2].receiveShadow = true;
+world1.game.player.mesh.castShadow = true;
+world1.game.player.mesh.receiveShadow = true;
+
+
+
+
+var spotLight = new THREE.SpotLight(0xFFFFFF);//,1?
+spotLight.castShadow = true;
+spotLight.angle = 0.75;
+spotLight.exponent = 2.0;
+spotLight.penumbra = 0.05;
+spotLight.decay = 2;
+spotLight.distance = 500;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+spotLight.position.set(15, 40, 35);
+world1.t.scene.add(spotLight);

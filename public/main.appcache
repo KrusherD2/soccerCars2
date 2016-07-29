@@ -1,0 +1,76 @@
+CACHE MANIFEST
+# 5-8-2016
+
+# Explicitly cached 'master entries'.
+CACHE:
+#/favicon.ico
+#index.html
+assets/models/characters/players/wizard/final/wizard.json
+
+
+
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Body_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Body_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Hair_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Hair_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Shoes_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Shoes_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Moustache_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Moustache_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Hat_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Hat_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/tunic_SPEC.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/tunic_DIF.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Bottom_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Bottom_diffuse.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Beard_specular.png
+http://fosse.co/mmo/assets/models/characters/players/wizard/final/textures/Wizard_Beard_diffuse.png
+
+
+
+
+
+
+
+
+
+
+http://fosse.co/mmo/assets/models/icons/spells/painterly-spell-icons-1/fireball-sky-1.png
+http://fosse.co/mmo/assets/models/icons/spells/painterly-spell-icons-1/enchant-acid-3.png
+http://fosse.co/mmo/assets/models/icons/spells/painterly-spell-icons-1/protect-orange-3.png
+
+http://fosse.co/mmo/assets/textures/loading1.gif
+
+
+
+http://fosse.co/mmo/assets/models/icons/spells/nospell/greycross.svg
+http://fosse.co/mmo/assets/models/icons/spells/painterly-spell-icons-3/frame-1-grey.png
+
+
+
+
+
+
+
+
+
+
+http://fosse.co/mmo/assets/worldMap/world1/heightmap/heightmap90.png
+http://fosse.co/mmo/assets/worldMap/world1/texture/texture90.png
+
+
+
+
+
+#assets/models/characters/players/wizard/final/*
+
+# Resources that require the user to be online.
+NETWORK:
+*
+
+# static.html will be served if main.py is inaccessible
+# offline.jpg will be served in place of all images in images/large/
+# offline.html will be served in place of all other .html files
+FALLBACK:
+#/main.py /static.html
+#images/large/ images/offline.jpg
