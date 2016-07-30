@@ -1,5 +1,6 @@
 var login = require('./login');
 var spells = require('./spells');
+var THREE = require('three');
 
 
 

@@ -43,6 +43,9 @@ function log(text) {
 	}
 }
 
+document.exitPointerLock = document.exitPointerLock ||
+         document.mozExitPointerLock;
+
 $(function() {
 	//(function(){var script=document.createElement('script');script.type='text/javascript';script.src='https://cdn.rawgit.com/zz85/zz85-bookmarklets/master/js/ThreeInspector.js';document.body.appendChild(script);})()
 	THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
@@ -176,16 +179,10 @@ $(function() {
 	};
 
 
-
-
-
-
-
-
-
 	$(document).on('mousedown', function(event) {
 		input.mouse.x = event.clientX;
 		input.mouse.y = event.clientY;
+		
 		switch (event.which) {
 			case 1:
 				input.mouse.lclick.held = true;
@@ -228,8 +225,11 @@ $(function() {
 	});
 
 
-	$(document).on('mousemove', function(event) {
-		event.preventDefault();
+	$(document).on('mousemove', function(e) {
+		e.preventDefault();
+		
+		event = e.originalEvent;
+		
 		var movementX = event.movementX || event.mozMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || 0;
 
@@ -249,13 +249,20 @@ $(function() {
 		var xminmax = 0.5;
 		var yminmax = 0.5;
 		
-		var deltaX = limit(-1 * xminmax, xminmax, input.mouse.deltaX)*-0.01;
-		var deltaY = limit(-1 * xminmax, xminmax, input.mouse.deltaY)*0.01;
+		var deltaX = limit(-1 * xminmax, xminmax, input.mouse.deltaX)*-0.1;
+		var deltaY = limit(-1 * yminmax, yminmax, input.mouse.deltaY)*0.1;
 
 
-		if (input.mouse.rclick || input.mouse.lclick) {
+		if (input.mouse.rclick.held || input.mouse.lclick.held) {
 			input.controls.rotation.x += deltaX;
 			input.controls.rotation.y += deltaY;
+			
+			canvas = $("canvas")[0];
+			canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
+			//document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+			canvas.requestPointerLock()
+			
+			console.log(input.mouse.deltaX)
 			input.controls.rotation.x = limit(0, Math.PI * 2, input.controls.rotation.x, true, true);
 			input.controls.rotation.y = limit((-Math.PI / 2) + 0.02, (Math.PI / 2) - 0.02, input.controls.rotation.y, false);
 		}
@@ -617,9 +624,9 @@ $(function() {
 		});
 
 		var fileList = [
-			"assets/models/characters/players/wizard/final/wizard.json",
-			"assets/models/environment/trees/animated-tree/final/treeBark.json",
-			"assets/models/environment/trees/animated-tree/final/treeLeaves.json",
+			//"assets/models/characters/players/wizard/final/wizard.json",
+			//"assets/models/environment/trees/animated-tree/final/treeBark.json",
+			//"assets/models/environment/trees/animated-tree/final/treeLeaves.json",
 		];
 		world1.t.AH.loadAssets(fileList);
 
@@ -788,7 +795,7 @@ $(function() {
 	world1.t.scene.add(ambientLight);
 
 
-	window.sky1 = new worldSky();
+	/*window.sky1 = new worldSky();
 	world1.t.scene.add(sky1.sunSphere);
 	world1.t.scene.add(sky1.light);
 	world1.t.scene.add(sky1.mesh);
@@ -802,6 +809,7 @@ $(function() {
 		//world1.t.sky.effectController.azimuth = 0.00005*n;
 		sky1.update();
 	}, 100);
+	*/
 
 
 
@@ -945,8 +953,6 @@ $(function() {
 			socket.emit('input', {
 				actions: input.action,
 				data: input.data,
-				//rotation: input.controls.rotation,
-				//rotation: new THREE.Vector3(0, 0, world1.t.controls.getAzimuthalAngle()),
 			});
 
 			if (typeof input.joystick !== "undefined") {

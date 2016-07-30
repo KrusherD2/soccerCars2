@@ -1,12 +1,12 @@
 {
   "name": "mmo",
   "version": "1.0.0",
-  "description": "mmo",
+  "description": "soccer cars 2",
   "author": "Matthew Fosse",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mfosse/MMO.git"
+    "url": "git+https://github.com/mfosse/soccerCars2.git"
   },
   "dependencies": {
     "bcrypt": "^0.8.5",
@@ -18,7 +18,7 @@
     "express": "^4.13.4",
     "express-session": "^1.13.0",
     "io": "^0.1.10",
-    "jquery": "^2.2.2",
+    "jquery": "^3.1.0",
     "localforage": "^1.4.0",
     "lzma": "^2.3.0",
     "minifyify": "^7.3.3",
@@ -28,16 +28,16 @@
     "shader-particle-engine": "^1.0.5",
     "shortid": "^2.2.6",
     "socket.io": "^1.4.5",
-    "three": "^0.76.1",
+    "three": "^0.79.0",
     "webhamsters": "^3.7.0"
   },
   "engines": {
     "node": "*"
   },
   "bugs": {
-    "url": "https://github.com/mfosse/MMO/issues"
+    "url": "https://github.com/mfosse/soccerCars2/issues"
   },
-  "homepage": "https://github.com/mfosse/MMO#readme",
+  "homepage": "https://github.com/mfosse/soccerCars2#readme",
   "main": "app.js",
   "devDependencies": {},
   "scripts": {

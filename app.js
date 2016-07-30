@@ -889,8 +889,9 @@ function loop() {
 	//}
 	
 	for(var i = 0; i < gs.nodes.length; i++) {
-		var tempNode = gs.nodes[i];
-		tempNode.update();
+		//var tempNode = gs.nodes[i];
+		//tempNode.update();
+		gs.nodes[i].update();
 	}
 	
 	
@@ -904,4 +905,4 @@ function loop() {
 	}
 	setTimeout(loop, 1000/60);
 }
-setTimeout(loop, 2000);
+setTimeout(loop, 100);
