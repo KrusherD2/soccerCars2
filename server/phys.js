@@ -101,35 +101,27 @@ fn.createPhysBody2 = function createPhysBody(shape) {
 
 
 
+
+
+
+
+
 fn.createVehicleBody = function() {
-	
-};
-
-
-fn.vehicle = function() {
 	this.parts = {};
 	this.parts.chassis = {};
 	this.parts.wheels = {};
 	this.parts.wheels.bodies = [];
 	this.parts.wheels.meshes = [];
-	this.parts.chassis.body = new CANNON.Body({mass:1500.0});
-	//var chassisShape = new CANNON.Box(new CANNON.Vec3(2, 1, 0.5));
-	
-	// length width height
-	var chassisShape = new CANNON.Box(new CANNON.Vec3(2, 0.85, 0.4));
-	var chassisOffsetLoc = new CANNON.Vec3(0, 0, 0);
-	
-	this.parts.chassis.body.addShape(chassisShape, chassisOffsetLoc);
-	
-	
-	
-	
-	
-	// add wheels
-	
+	this.parts.chassis.body = new CANNON.Body({mass:800.0});;
+	var chassisShape = new CANNON.Box(new CANNON.Vec3(1, 2, 0.4));
+	this.parts.chassis.body.addShape(chassisShape, new CANNON.Vec3(0, 0, 0));
+
 	var options = {
 		radius: 0.385,//0.5
-		directionLocal: new CANNON.Vec3(0, 0, 1),
+		directionLocal: new CANNON.Vec3(0, 0, -1),
+		//directionWorld: new CANNON.Vec3(0, 0, 0),
+		axleLocal: new CANNON.Vec3(-1, 0, 0),//0,1,0
+		//axleWorld: new CANNON.Vec3(1, 0, 0),
 		suspensionStiffness: 40,//40
 		suspensionRestLength: 0.475,//0.3
 		frictionSlip: 3,//100
@@ -137,9 +129,8 @@ fn.vehicle = function() {
 		dampingCompression: 2.5,//4.4
 		maxSuspensionForce: 100000,//100000
 		rollInfluence: 0.1,//0.01
-		axleLocal: new CANNON.Vec3(0, 1, 0),//0,1,0
-		//axleWorld: new CANNON.Vec3(1, 0, 0),
-		chassisConnectionPointLocal: new CANNON.Vec3(0, 0, 0),//1,1,0
+
+		chassisConnectionPointLocal: new CANNON.Vec3(0, 0, 0),//doesn't matter
 		maxSuspensionTravel: 0.3,//0.3
 		customSlidingRotationalSpeed: -30,//-30
 		useCustomSlidingRotationalSpeed: true//true
@@ -147,44 +138,104 @@ fn.vehicle = function() {
 	
 	this.vehicle = new CANNON.RaycastVehicle({
 		chassisBody: this.parts.chassis.body,
+		indexRightAxis: 0,// X
+		indexForwardAxis: 1,// Y
+		indexUpAxis: 2,// Z
 	});
 	
-	/*options.chassisConnectionPointLocal.set(-1, 1, 0);// \_
-	options.isFrontWheel = true;
-	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(-1, -1, 0);// _/
-	options.isFrontWheel = true;
-	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(1, 1, 0);// /-
-	options.isFrontWheel = false;
-	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(1, -1, 0);// -\
-	options.isFrontWheel = false;
-	this.vehicle.addWheel(options);*/
-	
 	var cWheelOpts = {};
-	cWheelOpts.axleFront = 1.4;//1.4
-	cWheelOpts.axleRear = 1.1;//1.1
-	cWheelOpts.axleWidth = 0.75;//0.75
-	cWheelOpts.axleHeight = -0.1;//0
+	cWheelOpts.axleFront = 1.1;//1.4
+	cWheelOpts.axleRear = 1;//1.1
+	cWheelOpts.axleWidth = 1;//0.75
+	cWheelOpts.axleHeight = 0;//0
 	
-	options.chassisConnectionPointLocal.set(-cWheelOpts.axleRear, cWheelOpts.axleWidth, cWheelOpts.axleHeight);
+	options.chassisConnectionPointLocal.set(cWheelOpts.axleWidth, cWheelOpts.axleFront, cWheelOpts.axleHeight);//top right
 	//options.isFrontWheel = true;
 	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(-cWheelOpts.axleRear, -cWheelOpts.axleWidth, cWheelOpts.axleHeight);
+	options.chassisConnectionPointLocal.set(-cWheelOpts.axleWidth, cWheelOpts.axleFront, cWheelOpts.axleHeight);//top left
 	//options.isFrontWheel = true;
 	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(cWheelOpts.axleRear, cWheelOpts.axleWidth, cWheelOpts.axleHeight);
+	options.chassisConnectionPointLocal.set(cWheelOpts.axleWidth, -cWheelOpts.axleRear, cWheelOpts.axleHeight);//back right
 	//options.isFrontWheel = false;
 	this.vehicle.addWheel(options);
-	options.chassisConnectionPointLocal.set(cWheelOpts.axleRear, -cWheelOpts.axleWidth, cWheelOpts.axleHeight);
+	options.chassisConnectionPointLocal.set(-cWheelOpts.axleWidth, -cWheelOpts.axleRear, cWheelOpts.axleHeight);//back left
 	//options.isFrontWheel = false;
 	this.vehicle.addWheel(options);
 	
 	
 	
 	
+	for(var i = 0; i < this.vehicle.wheelInfos.length; i++) {
+		var wheel = this.vehicle.wheelInfos[i];
+		var cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, 0.35, 16);//wheel.radius/2 for width 20 for last parameter
+		var wheelBody = new CANNON.Body({mass: 1}); //, material:this.cMatWheel});
+		wheelBody.type = CANNON.Body.KINEMATIC;
+		wheelBody.collisionFilterGroup = 0;//turn off collisions
+		var q = new CANNON.Quaternion();
+		q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
+		wheelBody.addShape(cylinderShape, new CANNON.Vec3(), q);
+		this.parts.wheels.bodies.push(wheelBody);
+		
+		
+	}
+	this.vehicle.setBrake(0, 0);
+	this.vehicle.setBrake(0, 1);
+	this.vehicle.setBrake(0, 2);
+	this.vehicle.setBrake(0, 3);
+	
+	
+	this.addVehicleToWorld = function(physicsWorld) {
+		this.vehicle.addToWorld(physicsWorld);
+		for(var i = 0; i < 4; i++) {
+			physicsWorld.addBody(this.parts.wheels.bodies[i]);
+		}
+	};
+	
+	this.update = function() {
+		for(var i = 0; i < 4; i++) {
+			this.vehicle.updateWheelTransform(i);
+			var transform = this.vehicle.wheelInfos[i].worldTransform;
+			this.parts.wheels.bodies[i].position.copy(transform.position);
+			this.parts.wheels.bodies[i].quaternion.copy(transform.quaternion);
+		}
+	}
+	
+	this.reset = function() {
+		this.vehicle.chassisBody.velocity.set(0, 0, 0);
+		this.vehicle.chassisBody.position.set(200, 100, 20);
+	}
+	
+	this.bump = function() {
+		this.vehicle.chassisBody.angularVelocity.set(20, 0, 0)
+	}
+	
+	//world1.c.objects.push(this);
+	return this;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

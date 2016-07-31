@@ -15,11 +15,12 @@ require('./libs/cannonDebugRenderer');
 require('./libs/skyShader');
 window.CANNON = require('cannon');
 var SPE = require('shader-particle-engine');
-var hamsters = require('./libs/hamsters');
+var hamsters = require('./libs/hamsters.min');
 require('./libs/sweetalert.min');
 //var mobileConsole = require('./libs/mobile-console');
 var VirtualJoystick = require('./libs/virtualjoystick');
 var randomColor = require('./libs/randomColor');
+var phys = require('../../server/phys');
 
 
 var fn = require('./functions');
@@ -101,12 +102,12 @@ $(function() {
 	preferences.keyboard.layout.jump = 32;
 	//preferences.keyboard.layout.castFireball = 49;
 
-	preferences.keyboard.layout.activateSpellSlot1 = 49;
+	/*preferences.keyboard.layout.activateSpellSlot1 = 49;
 	preferences.keyboard.layout.activateSpellSlot2 = 50;
 	preferences.keyboard.layout.activateSpellSlot3 = 51;
 	preferences.keyboard.layout.activateSpellSlot4 = 52;
 
-	preferences.keyboard.layout.toggleInventory = 73;
+	preferences.keyboard.layout.toggleInventory = 73;*/
 	preferences.keyboard.layout.toggleSettingsWindow = 79;
 	preferences.keyboard.layout.toggleMap = 77;
 
@@ -257,12 +258,6 @@ $(function() {
 			input.controls.rotation.x += deltaX;
 			input.controls.rotation.y += deltaY;
 			
-			canvas = $("canvas")[0];
-			canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
-			//document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-			canvas.requestPointerLock()
-			
-			console.log(input.mouse.deltaX)
 			input.controls.rotation.x = limit(0, Math.PI * 2, input.controls.rotation.x, true, true);
 			input.controls.rotation.y = limit((-Math.PI / 2) + 0.02, (Math.PI / 2) - 0.02, input.controls.rotation.y, false);
 		}
@@ -510,7 +505,6 @@ $(function() {
 
 
 	// Connect to the server
-	//var socket;
 	socket = io('http://fosse.co', {
 		path: '/8100/socket.io'
 	});
@@ -519,7 +513,7 @@ $(function() {
 		console.log(data);
 	});
 
-	function login(characterName, classType) {
+	function login(characterName, team, type) {
 		if (window.signedIn) {
 
 			socket.emit('joinWorld', {
@@ -530,7 +524,8 @@ $(function() {
 			console.log('joining');
 			socket.emit('joinWorld', {
 				characterName: characterName,
-				class: classType,
+				class: team,
+				type: "teamCar"// or human
 			});
 		}
 
@@ -624,7 +619,7 @@ $(function() {
 		});
 
 		var fileList = [
-			//"assets/models/characters/players/wizard/final/wizard.json",
+			"assets/models/characters/players/wizard/final/wizard.json",
 			//"assets/models/environment/trees/animated-tree/final/treeBark.json",
 			//"assets/models/environment/trees/animated-tree/final/treeLeaves.json",
 		];
@@ -761,7 +756,7 @@ $(function() {
 			this.c.pw.defaultContactMaterial.restitution = 0; //unset
 			//this.c.pw.defaultContactMaterial.contactEquationStiffness = 1000000;//unset
 			//this.c.pw.defaultContactMaterial.frictionEquationStiffness = 100000;//unset
-			this.c.debug = false;
+			this.c.debug = true;
 			this.c.debugRenderer = new THREE.CannonDebugRenderer(this.t.scene, this.c.pw);
 
 			// shader particle engine
@@ -827,17 +822,11 @@ $(function() {
 		}
 		world1.game.worldMap.setZoneByCoord(new THREE.Vector2(0, 0));
 
-		world1.t.HUD.items.healthBar = new createHealthBar();
+		//world1.t.HUD.items.healthBar = new createHealthBar();
 		//world1.t.HUD.items.XPBar = new createXPBar2();
-		world1.t.HUD.items.levelText = new createLevelText(0);
+		//world1.t.HUD.items.levelText = new createLevelText(0);
 		//world1.t.HUD.items.inventory = new createHUDInventory();
-		world1.t.HUD.items.spellBar = new createSpellBar();
-
-		//world1.t.HUD.items.healthBar.update(vpd[i].health/100);
-		//var percent = vpd[i].experience/(100*(vpd[i].level+1));
-		//world1.t.HUD.items.XPBar.update(vpd[i].experience, vpd[i].level);
-		//world1.t.HUD.items.XPBar.update(percent);
-		//world1.t.HUD.items.levelText.update(vpd[i].level);
+		//world1.t.HUD.items.spellBar = new createSpellBar();
 
 	});
 
@@ -981,6 +970,7 @@ $(function() {
 					input.action.moveRight = false;
 				}
 			}
+			
 
 			var pMesh = world1.game.player.mesh;
 			var pPhys = world1.game.player.phys;

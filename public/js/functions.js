@@ -1,6 +1,7 @@
 var login = require('./login');
 var spells = require('./spells');
 var THREE = require('three');
+var phys = require('../../server/phys')
 
 
 
@@ -1860,6 +1861,10 @@ function node(static) {
 	this.static = static;
 }
 
+function clientControllable() {
+	
+}
+
 
 
 
@@ -1933,7 +1938,7 @@ fn.playerConstructor = function playerConstructor(playerData) {
 	character.call(this);
 	this.type = "player";
 	this.mesh.meshOffset = new THREE.Vector3(0, 0, -2);
-	this.phys = createPhysBody("capsule")(5, 1, 3.2);
+	this.phys = phys.createPhysBody("capsule")(5, 1, 3.2);
 	this.items = {};
 	this.inventory = {};
 	this.equipment = {};
@@ -2022,7 +2027,7 @@ fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 
 
-
+/*
 fn.createPhysBody = function createPhysBody(shape) {
 	var createCollider;
 	switch (shape) {
@@ -2059,7 +2064,7 @@ fn.createPhysBody = function createPhysBody(shape) {
 	}
 	return createCollider;
 };
-
+*/
 
 
 

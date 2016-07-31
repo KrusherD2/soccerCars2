@@ -195,7 +195,7 @@ exports.zone = function(worldMap, column, row) {//fill in paramater for heightma
 
 
 exports.worldMap = function(gameServer) {
-	//var scopr = this;
+	//var scope = this;
 	this.gameServer = gameServer;
 	
 	this.rows = 10;

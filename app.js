@@ -120,6 +120,9 @@ gameServer.prototype.initScene = function() {
 
 gameServer.prototype.updatePhysics = function() {
 	this.c.pw.step(1 / 60);
+	for(var i = 0; i < this.c.objects.length; i++) {
+		this.c.object[i].update()
+	}
 };
 
 
@@ -174,6 +177,7 @@ function client(id) {
 	};
 	
 	this.getOnlineCharacter = function() {
+		console.log(this);
 		var onlineCharacter;
 		for(var i = 0; i < this.characterNames.length; i++) {
 			if(this.characters[this.characterNames[i]].online === true) {
@@ -223,13 +227,10 @@ function node(static) {
 	this.online = false;
 	this.static = static;
 	
-	//this.position = new THREE.Vector3();
-	
-	//this.phys = phys.createPhysBody2()();
 	this.phys = phys.createPhysBody2()();
 	
 	//this.currentZoneCoords = new THREE.Vector2();
-	this.surroundingZone = gs.worldMap.findZoneByAbsoluteCoordinates(new THREE.Vector3());
+	this.surroundingZone = gs.worldMap.findZoneByAbsoluteCoordinates(this.phys.position);
 	this.surroundingZone.nodes.push(this);
 	
 	this.visibleNodes = [];
@@ -238,7 +239,7 @@ function node(static) {
 		//remove this node from old zone and add to new one IF they changed zones
 		var oldZone = this.surroundingZone;
 		var oldCoords = oldZone.coordPosition;
-		var newZone = gs.worldMap.findZoneByAbsoluteCoordinates(new THREE.Vector3(1, 1, 100));
+		var newZone = gs.worldMap.findZoneByAbsoluteCoordinates(this.phys.position);
 		var newCoords = newZone.coordPosition;
 		
 		if(oldCoords.x == newCoords.x && oldCoords.y == newCoords.y) {
@@ -298,51 +299,6 @@ node.prototype.update = function() {
 
 
 
-function spell(name, cooldownTime, castTime) {
-	this.name = name;
-	this.enabled = true;
-	this.cooldownTime = cooldownTime || 2000;
-	this.castTime = castTime || 0;
-	
-	this.use = function() {
-		this.enabled = false;
-		setTimeout(function() {
-			this.enabled = true;
-		}, this.cooldownTime);
-	}
-}
-
-
-
-
-function wizard() {
-	this.checkSpells = function() {
-		if(this.level >= 0) {
-			this.learnSpell("melee");
-		}
-		if(this.level >= 5) {
-			this.learnSpell("fireball");
-		}
-	}
-}
-
-function rogue() {
-	this.checkSpells = function() {
-		if(this.level >= 0) {
-			this.learnSpell("melee");
-			
-		}
-		if(this.level >= 5) {
-			this.learnSpell("fireball");
-		}
-	}
-}
-
-
-
-
-
-
 function character() {
 	node.call(this);
 }
@@ -355,17 +311,27 @@ character.prototype.constructor = character;
 
 
 
+function clientControllable(owner) {
+	node.call(this);
+	this.owner = owner;
+	this.socketId = this.owner.socketId;
+	this.data = this.owner.data;
+	
+}
+clientControllable.prototype.constructor = clientControllable;
+
+
+
+
+
+
 
 function player(owner, characterName, classType) {
-	character.call(this);
+	clientControllable.call(this, owner);
 	
 	this.online = false;
 
 	this.type = "player";
-	this.owner = owner;
-	this.socketId = this.owner.socketId;
-	//this.keys = this.owner.keys;
-	this.data = this.owner.data;
 	
 	this.characterName = characterName;
 	if(this.owner.characterNames.indexOf(this.characterName) == -1) {
@@ -378,8 +344,8 @@ function player(owner, characterName, classType) {
 		isJumping: false,
 		isGrounded: false
 	};
-	this.phys = phys.createPhysBody("capsule")(5, 1, 3.2);
-	//phys.createPhysBody2("capsule", 2)(this.phys, 1, 3.2);
+	//this.phys = phys.createPhysBody("capsule")(5, 1, 3.2);
+	phys.createPhysBody2("capsule")(this.phys, 5, 1, 3.2);
 	gs.c.pw.addBody(this.phys);
 	this.phys.position.set(1,1,100);
 	
@@ -388,7 +354,7 @@ function player(owner, characterName, classType) {
 	this.quaternion = this.phys.quaternion;
 	this.velocity = this.phys.velocity;
 	this.rotation2 = function(){
-		return this.owner.data.rotation;	
+		return this.owner.data.rotation || {x:0, y:0, z:0};	
 	};
 	this.health = 100;
 	this.level = 0;
@@ -412,7 +378,7 @@ function player(owner, characterName, classType) {
 	this.warpTime = 0.2;
 
 	
-	this.setClass(classType);
+	//this.setClass(classType);
 
 	this.load = function(savedCharacter) {
 		var sc = savedCharacter;
@@ -471,21 +437,6 @@ player.prototype.saveObj = function() {
 		level: this.level,
 		experience: this.experience
 	};
-};
-
-player.prototype.setClass = function(classType) {
-	if(classType != "wizard" || classType != "rogue") {
-		classType = "wizard";
-	}
-	
-	this.class = classType;
-	
-	if(this.class == "wizard") {
-		wizard.call(this);
-	} else if(this.class == "rogue") {
-		rogue.call(this);
-	}
-	this.checkSpells();
 };
 
 
@@ -558,7 +509,7 @@ player.prototype.learnSpell = function(spellName) {
 };
 
 
-player.prototype.move = function() {
+player.prototype.processInput = function() {
 	var data = this.owner.data;
 	var actions = this.owner.actions;
 	var rotation = this.owner.data.rotation || new THREE.Vector3();
@@ -710,7 +661,7 @@ player.prototype.updateOwner = function() {
 
 player.prototype.update = function() {
 	// rename to process input?
-	this.move();
+	this.processInput();
 	
 	// last thing in this function
 	this.calcVisibleNodes();
@@ -726,6 +677,43 @@ function cooldown(cooldownTime) {
 }
 
 
+
+
+
+
+
+
+
+
+
+function vehicle() {
+	character.call(this);
+	
+	
+}
+vehicle.prototype = Object.create(character.prototype);
+vehicle.prototype.constructor = vehicle;
+
+
+vehicle.prototype.update = function() {
+	// rename to process input?
+	this.processInput();
+	
+	// last thing in this function
+	this.calcVisibleNodes();
+	this.updateOwner();
+};
+
+
+
+
+
+function teamCar(owner, team) {
+	clientControllable.call(this, owner);
+	vehicle.call(this);
+	
+	
+}
 
 
 
@@ -774,7 +762,15 @@ io.on('connection', function(socket) {
 			gs.clients[socket.id].username = guestName;
 			gs.clients[socket.id].characterNames.push(guestName);
 			
-			var newCharacter = new player(gs.clients[socket.id], guestName, data.class);
+			
+			
+			var newCharacter;
+			if(data.type == "teamCar") {
+				newCharacter = new teamCar(gs.clients[socket.id], guestName, data.class);
+			} else if(data.type == "human") {
+				newCharacter = new player(gs.clients[socket.id], guestName, data.class);
+			}
+			
 			newCharacter.online = true;
 			gs.clients[socket.id].characters[guestName] = newCharacter;
 			gs.nodes.push( gs.clients[socket.id].characters[guestName] );
