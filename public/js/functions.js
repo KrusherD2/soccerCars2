@@ -1896,7 +1896,9 @@ function character() {
 		}
 		world1.c.objects.push(this);
 		world1.t.scene.add(this.mesh);
-		world1.c.pw.addBody(this.phys);
+		if(this.phys) {
+			world1.c.pw.addBody(this.phys);
+		}
 	};
 	
 	
@@ -1996,20 +1998,6 @@ fn.playerConstructor = function playerConstructor(playerData) {
 			var newRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), newData.rotation2.x - Math.PI/2);
 			newRotation = newRotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI/2));
 			this.mesh.quaternion.copy(newRotation);
-		} else {
-			
-			//if(this.learnedSpells)
-			
-			//for(var i = 0; i < newData.learnedSpells.length; i++) {
-				//world1.t.HUD.items.spellBar.spellSlots[i].spell.changeSpell(newData.learnedSpells[i]);
-			//}
-			//world1.t.HUD.items.spellBar.spellSlots[0].spell.changeSpell("fireball");
-			
-			//world1.t.HUD.items.healthBar.update(newData.health/100);
-			//var percent = newData.experience/(100*(newData.level+1));
-			//world1.t.HUD.items.XPBar.update(newData.experience, newData.level);
-			//world1.t.HUD.items.XPBar.update(percent);
-			//world1.t.HUD.items.levelText.update(newData.level);
 		}
 		
 		this.mesh.warpTime = newData.warpTime;
@@ -2027,44 +2015,32 @@ fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 
 
-/*
-fn.createPhysBody = function createPhysBody(shape) {
-	var createCollider;
-	switch (shape) {
-		case "capsule":
-			createCollider = function(mass, radius, height, isRotated) {
-				var cylinderShape = new CANNON.Cylinder(radius, radius, height, 16);
-				var sphereShape = new CANNON.Sphere(radius);
-				var tempBody = new CANNON.Body({
-					mass: mass
-				});
-
-				// CHANGE LATER
-				if (!isRotated || isRotated) {
-					tempBody.addShape(cylinderShape);
-					tempBody.addShape(sphereShape, new CANNON.Vec3(0, 0, height / 2));
-					tempBody.addShape(sphereShape, new CANNON.Vec3(0, 0, -height / 2));
-				} else if (isRotated) {
-					// TODO
-				}
-
-				tempBody.angularDamping = 1;
-				//tempBody.position.set(0, 2, 5);
-				return tempBody;
-			};
-			break;
-		case "box":
-
-			break;
-
-		case "sphere":
-
-			break;
-
+fn.teamCar = function(data) {
+	character.call(this);
+	this.ph = phys.createVehicleBody();
+	this.phys = this.ph.vehicle.chassisBody;
+	
+	
+	
+	this.updateData = function(newData) {
+		this.phys.position.copy(newData.position);
+		//this.phys.position.lerp(newData.position, 1, this.phys.position);
+		this.phys.quaternion.copy(newData.quaternion);
+		this.phys.velocity.copy(newData.velocity);
+		
+		//if(world1.game.player.uniqueId !== this.uniqueId) {
+			//var newRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), newData.rotation2.x - Math.PI/2);
+			//newRotation = newRotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI/2));
+			//this.mesh.quaternion.copy(newRotation);
+		//}
+		
+		/*this.mesh.warpTime = newData.warpTime;
+		this.mesh.animTo = newData.animTo;
+		this.mesh.animSpeed = newData.animSpeed;*/
 	}
-	return createCollider;
-};
-*/
+}
+fn.teamCar.prototype = Object.create(character.prototype);
+fn.teamCar.prototype.constructor = fn.teamCar;
 
 
 

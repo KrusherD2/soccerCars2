@@ -177,7 +177,6 @@ function client(id) {
 	};
 	
 	this.getOnlineCharacter = function() {
-		console.log(this);
 		var onlineCharacter;
 		for(var i = 0; i < this.characterNames.length; i++) {
 			if(this.characters[this.characterNames[i]].online === true) {
@@ -708,19 +707,80 @@ vehicle.prototype.update = function() {
 
 
 
-function teamCar(owner, team) {
+function teamCar(owner, characterName, team) {
 	clientControllable.call(this, owner);
 	vehicle.call(this);
+	
+	this.team = team;
+	this.type = "teamCar"
+	
+	this.ph = phys.createVehicleBody();
+	
+	// set references to chassis body
+	this.phys.position = this.ph.vehicle.chassisBody.position;
+	this.phys.quaternion = this.ph.vehicle.chassisBody.quaternion;
+	this.phys.velocity = this.ph.vehicle.chassisBody.velocity;
+	
+	this.ph.addVehicleToWorld(gs.c.pw);
+	
+	
+	this.characterName = characterName;
+	if(this.owner.characterNames.indexOf(this.characterName) == -1) {
+		this.owner.characterNames.push(this.characterName);
+	}
+	
+	this.temp = {};
+	this.temp.inputVelocity = new THREE.Vector3(0, 0, 0);
 	
 	
 }
 
+teamCar.prototype.updateOwner = function() {
+	io.to(this.socketId).emit('visibleNodes', {
+		vn: this.visibleNodes
+	});
+};
+
+teamCar.prototype.update = function() {
+	this.processInput();
+	
+	// last thing in this function
+	this.calcVisibleNodes();
+	this.updateOwner();
+};
 
 
 
 
+teamCar.prototype.viewObj = function() {
+	return {
+		uniqueId: this.uniqueId,
+		type: this.type,
+		team: this.team,
+		position: this.phys.position,
+		velocity: this.phys.velocity,
+		quaternion: this.phys.quaternion,
+		//rotation2: this.rotation2(),
+		characterName: this.characterName,
+		animTo: this.animTo,
+		animSpeed: this.animSpeed,
+		warpTime: this.warpTime,
+	};
+};
 
 
+
+teamCar.prototype.processInput = function() {
+	
+	var data = this.owner.data;
+	var actions = this.owner.actions;
+	var rotation = this.owner.data.rotation || new THREE.Vector3();
+
+	this.temp.inputVelocity.set(0, 0, 0);
+
+	
+	
+};
 
 
 

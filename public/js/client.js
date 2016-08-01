@@ -607,9 +607,9 @@ $(function() {
 
 
 		world1.t.AH.onloadFuncs.push(function() {
-			world1.game.player = new playerConstructor();
-			world1.game.player.setClass("wizard");
-			//world1.game.player.username = data.username;
+			world1.game.player = new teamCar();
+			//world1.game.player = new playerConstructor();
+			//world1.game.player.setClass("wizard");
 			world1.game.accountName = data.accountName;
 			world1.game.player.characterName = data.characterName;
 			world1.game.player.uniqueId = data.uniqueId;
@@ -619,7 +619,8 @@ $(function() {
 		});
 
 		var fileList = [
-			"assets/models/characters/players/wizard/final/wizard.json",
+			"assets/models/objects/vehicles/car.json",
+			//"assets/models/characters/players/wizard/final/wizard.json",
 			//"assets/models/environment/trees/animated-tree/final/treeBark.json",
 			//"assets/models/environment/trees/animated-tree/final/treeLeaves.json",
 		];
@@ -643,6 +644,9 @@ $(function() {
 
 
 	socket.on('visibleNodes', function(data) {
+		
+		world1.game.visiblePlayersData = data.vn;// moved here 7-31-16
+		
 		var vp = world1.game.visiblePlayers;
 		var vpd = world1.game.visiblePlayersData;
 		//CHECK FOR DELETED PLAYERS
@@ -656,6 +660,8 @@ $(function() {
 		}
 		for (var i = 0; i < currentNodes.length; i++) {
 			if (newNodes.indexOf(currentNodes[i]) == -1) {
+				// replace this with:
+				//vp[currentNodes[i]].removeSelf(world1)
 				world1.c.pw.removeBody(vp[currentNodes[i]].phys);
 				world1.t.scene.remove(vp[currentNodes[i]].mesh);
 				//world1.t.scene.remove(vp[currentNames[i] + "_label"].label);
@@ -663,26 +669,43 @@ $(function() {
 		}
 		//END OF CHECK
 
-		world1.game.visiblePlayersData = data.vn;
+		//world1.game.visiblePlayersData = data.vn;// moved up
 
 		// loop through nodes
 		for (var i = 0; i < vpd.length; i++) {
 			if (!world1.game.connected) {
 				continue;
 			}
+			// called player regaurdless of client's type
+			if (vpd[i].uniqueId == world1.game.player.uniqueId) {
+				var player = world1.game.player;
+				player.updateData(vpd[i]);
+				continue;
+			}
+			
+			// if its a player type
 			if (vpd[i].type == "player") {
-				if (vpd[i].uniqueId == world1.game.player.uniqueId) {
-					var player = world1.game.player;
-					player.updateData(vpd[i]);
-					continue;
-				} else if (typeof vp[vpd[i].uniqueId] == "undefined") {
+				// if the player doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
 					vp[vpd[i].uniqueId] = new playerConstructor(vpd[i]);
-
+				// if it does exist, update its properties
 				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
 					vp[vpd[i].uniqueId].updateData(vpd[i]);
 				}
 			}
-
+		
+			// if its a teamCar
+			if (vpd[i].type == "teamCar") {
+				// if the teamCar doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new teamCar(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}
+			}
 		}
 	});
 
@@ -1115,7 +1138,7 @@ $(function() {
 
 
 
-			followObject(world, world1.game.player.mesh, world.t.camera);
+			followObject(world, world1.game.player.phys, world.t.camera);
 			if (typeof world.t.renderer.clear != "undefined") {
 				world.t.renderer.clear();
 			}

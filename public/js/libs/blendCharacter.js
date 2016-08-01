@@ -41,9 +41,8 @@ THREE.BlendCharacter = function(assetHolder) {
 		}
 		
 		switch(url) {
-			case "wizard":
-				url = "assets/models/characters/players/wizard/final/wizard.json";
-				break;
+			case "car":
+				url = "assets/models/objects/vehicles/car.json";
 			case "treeLeaves":
 				url = "assets/models/enviroment/trees/animated-tree/final/treeLeaves.json";
 				break;
