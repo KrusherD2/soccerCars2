@@ -228,6 +228,12 @@ exports.worldMap = function(gameServer) {
 		var row = Math.floor(pos.y/this.zoneHeight);
 		pos.set(column, row);
 		//return position;
+		if(pos.x < 0) {
+			pos.x = 0;
+		}
+		if(pos.y < 0) {
+			pos.y = 0;
+		}
 		return this.zones[pos.x][pos.y];
 	}
 	

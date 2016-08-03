@@ -1,7 +1,7 @@
 var CANNON = require('cannon');
 var fn = {};
 
-fn.createPhysBody = function createPhysBody(shape, mass) {
+fn.createPhysBody = function createPhysBody(shape) {
 	var createCollider;
 	switch (shape) {
 		case "capsule":
@@ -30,17 +30,24 @@ fn.createPhysBody = function createPhysBody(shape, mass) {
 			break;
 
 		case "sphere":
-
+			createCollider = function(mass, radius) {
+				var tempBody = new CANNON.Body({
+					mass: mass
+				});
+				var sphereShape = new CANNON.Sphere(radius);
+				tempBody.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+				return tempBody;
+			};
 			break;
 			
 		default:
 			createCollider = function() {
-				var sphereShape = new CANNON.Sphere(0.001);
+				//var sphereShape = new CANNON.Sphere(0.001);
 				var tempBody = new CANNON.Body({
 					mass: 0
 				});
-				tempBody.addShape(sphereShape, new CANNON.Vec3());
-				tempBody.angularDamping = 1;
+				//tempBody.addShape(sphereShape, new CANNON.Vec3());
+				//tempBody.angularDamping = 1;
 				return tempBody;
 			};
 			break;
@@ -52,8 +59,9 @@ fn.createPhysBody = function createPhysBody(shape, mass) {
 
 
 
-
-fn.createPhysBody2 = function createPhysBody(shape) {
+// for when the physics body already exists
+// modifies existing body
+fn.createPhysBody2 = function(shape) {
 	var createCollider;
 	switch (shape) {
 		case "capsule":
@@ -83,7 +91,13 @@ fn.createPhysBody2 = function createPhysBody(shape) {
 			break;
 
 		case "sphere":
-
+			createCollider = function(body, mass, radius) {
+				body.mass = mass;
+				body.updateMassProperties();
+				
+				var sphereShape = new CANNON.Sphere(radius);
+				body.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+			};
 			break;
 			
 		default:
@@ -188,6 +202,13 @@ fn.createVehicleBody = function() {
 		this.vehicle.addToWorld(physicsWorld);
 		for(var i = 0; i < 4; i++) {
 			physicsWorld.addBody(this.parts.wheels.bodies[i]);
+		}
+	};
+	
+	this.removeVehicleFromWorld = function(physicsWorld) {
+		this.vehicle.removeFromWorld(physicsWorld);
+		for(var i = 0; i < 4; i++) {
+			physicsWorld.removeBody(this.parts.wheels.bodies[i]);
 		}
 	};
 	

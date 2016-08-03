@@ -1857,8 +1857,9 @@ function account() {
 
 
 
-function node(static) {
-	this.static = static;
+function node() {
+	//this.phys = phys.createPhysBody2()();
+	//this.static = static;
 }
 
 function clientControllable() {
@@ -1870,9 +1871,9 @@ function clientControllable() {
 
 
 function character() {
-
+	node.call(this);
 	this.mesh = new THREE.BlendCharacter(world1.t.AH);
-	this.phys;
+	this.phys = phys.createPhysBody2()();
 
 	this.mesh.warpTime = 0.2;
 	this.mesh.animTo = "none";
@@ -2005,6 +2006,11 @@ fn.playerConstructor = function playerConstructor(playerData) {
 		this.mesh.animSpeed = newData.animSpeed;
 	}
 	
+	this.removeSelf = function(world) {
+		world.c.pw.removeBody(this.phys);
+		world.t.scene.remove(this.mesh);
+	}
+	
 	
 	return this;
 }
@@ -2017,16 +2023,25 @@ fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 fn.teamCar = function(data) {
 	character.call(this);
-	this.ph = phys.createVehicleBody();
-	this.phys = this.ph.vehicle.chassisBody;
+	this.ph = new phys.createVehicleBody();
+	this.vehicle = this.ph.vehicle;
+	
+	this.phys = this.vehicle.chassisBody;
+	
+	this.ph.addVehicleToWorld(world1.c.pw);
+	
+	
 	
 	
 	
 	this.updateData = function(newData) {
+		
 		this.phys.position.copy(newData.position);
 		//this.phys.position.lerp(newData.position, 1, this.phys.position);
 		this.phys.quaternion.copy(newData.quaternion);
 		this.phys.velocity.copy(newData.velocity);
+		
+		this.ph.update();
 		
 		//if(world1.game.player.uniqueId !== this.uniqueId) {
 			//var newRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), newData.rotation2.x - Math.PI/2);
@@ -2038,10 +2053,46 @@ fn.teamCar = function(data) {
 		this.mesh.animTo = newData.animTo;
 		this.mesh.animSpeed = newData.animSpeed;*/
 	}
+	
+	this.removeSelf = function(world) {
+		this.ph.removeVehicleFromWorld(world.c.pw);
+		world.c.pw.removeBody(this.phys);
+		world.t.scene.remove(this.mesh);
+	}
+	
 }
 fn.teamCar.prototype = Object.create(character.prototype);
 fn.teamCar.prototype.constructor = fn.teamCar;
 
+
+
+
+
+
+fn.ball = function() {
+	character.call(this);
+	
+	phys.createPhysBody2("sphere")(this.phys, 1000, 5);
+	
+	
+	this.updateData = function(newData) {
+		this.phys.position.copy(newData.position);
+		//this.phys.position.lerp(newData.position, 1, this.phys.position);
+		this.phys.quaternion.copy(newData.quaternion);
+		this.phys.velocity.copy(newData.velocity);
+	}
+	
+	world1.c.pw.addBody(this.phys);// abstract to method later
+	
+	this.removeSelf = function(world) {
+		world.c.pw.removeBody(this.phys);
+		if(typeof(this.mesh) != "undefined") {
+			world.t.scene.remove(this.mesh);
+		}
+	}
+}
+fn.ball.prototype = Object.create(character.prototype);
+fn.ball.prototype.constructor = fn.ball;
 
 
 

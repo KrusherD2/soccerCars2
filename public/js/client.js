@@ -100,6 +100,7 @@ $(function() {
 	preferences.keyboard.layout.moveLeft = 65;
 	preferences.keyboard.layout.moveRight = 68;
 	preferences.keyboard.layout.jump = 32;
+	preferences.keyboard.layout.flip = 82;
 	//preferences.keyboard.layout.castFireball = 49;
 
 	/*preferences.keyboard.layout.activateSpellSlot1 = 49;
@@ -479,6 +480,9 @@ $(function() {
 			case keyboardLayout.right: //right
 				input.action.right = state;
 				break;
+			case keyboardLayout.flip: //r
+				input.action.flip = state;
+				break;
 			case keyboardLayout.toggleSettingsWindow:
 				if (state) {
 					input.action.toggleSettingsWindow = !input.action.toggleSettingsWindow;
@@ -608,6 +612,7 @@ $(function() {
 
 		world1.t.AH.onloadFuncs.push(function() {
 			world1.game.player = new teamCar();
+			
 			//world1.game.player = new playerConstructor();
 			//world1.game.player.setClass("wizard");
 			world1.game.accountName = data.accountName;
@@ -662,8 +667,10 @@ $(function() {
 			if (newNodes.indexOf(currentNodes[i]) == -1) {
 				// replace this with:
 				//vp[currentNodes[i]].removeSelf(world1)
-				world1.c.pw.removeBody(vp[currentNodes[i]].phys);
-				world1.t.scene.remove(vp[currentNodes[i]].mesh);
+				//world1.c.pw.removeBody(vp[currentNodes[i]].phys);
+				//world1.t.scene.remove(vp[currentNodes[i]].mesh);
+				vp[currentNodes[i]].removeSelf(world1);
+
 				//world1.t.scene.remove(vp[currentNames[i] + "_label"].label);
 			}
 		}
@@ -676,7 +683,7 @@ $(function() {
 			if (!world1.game.connected) {
 				continue;
 			}
-			// called player regaurdless of client's type
+			// called player regardless of client's type
 			if (vpd[i].uniqueId == world1.game.player.uniqueId) {
 				var player = world1.game.player;
 				player.updateData(vpd[i]);
@@ -700,6 +707,17 @@ $(function() {
 				// if the teamCar doesn't exist in the local copy, create it
 				if (typeof vp[vpd[i].uniqueId] == "undefined") {
 					vp[vpd[i].uniqueId] = new teamCar(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}
+			}
+			
+			if (vpd[i].type == "ball") {
+				// if the ball doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new ball(vpd[i]);
 				// if it does exist, update its properties
 				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
 					// update the copy with the latest data

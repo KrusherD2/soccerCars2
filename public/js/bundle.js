@@ -68062,6 +68062,7 @@ $(function() {
 	preferences.keyboard.layout.moveLeft = 65;
 	preferences.keyboard.layout.moveRight = 68;
 	preferences.keyboard.layout.jump = 32;
+	preferences.keyboard.layout.flip = 82;
 	//preferences.keyboard.layout.castFireball = 49;
 
 	/*preferences.keyboard.layout.activateSpellSlot1 = 49;
@@ -68441,6 +68442,9 @@ $(function() {
 			case keyboardLayout.right: //right
 				input.action.right = state;
 				break;
+			case keyboardLayout.flip: //r
+				input.action.flip = state;
+				break;
 			case keyboardLayout.toggleSettingsWindow:
 				if (state) {
 					input.action.toggleSettingsWindow = !input.action.toggleSettingsWindow;
@@ -68570,6 +68574,7 @@ $(function() {
 
 		world1.t.AH.onloadFuncs.push(function() {
 			world1.game.player = new teamCar();
+			
 			//world1.game.player = new playerConstructor();
 			//world1.game.player.setClass("wizard");
 			world1.game.accountName = data.accountName;
@@ -68624,8 +68629,10 @@ $(function() {
 			if (newNodes.indexOf(currentNodes[i]) == -1) {
 				// replace this with:
 				//vp[currentNodes[i]].removeSelf(world1)
-				world1.c.pw.removeBody(vp[currentNodes[i]].phys);
-				world1.t.scene.remove(vp[currentNodes[i]].mesh);
+				//world1.c.pw.removeBody(vp[currentNodes[i]].phys);
+				//world1.t.scene.remove(vp[currentNodes[i]].mesh);
+				vp[currentNodes[i]].removeSelf(world1);
+
 				//world1.t.scene.remove(vp[currentNames[i] + "_label"].label);
 			}
 		}
@@ -68638,7 +68645,7 @@ $(function() {
 			if (!world1.game.connected) {
 				continue;
 			}
-			// called player regaurdless of client's type
+			// called player regardless of client's type
 			if (vpd[i].uniqueId == world1.game.player.uniqueId) {
 				var player = world1.game.player;
 				player.updateData(vpd[i]);
@@ -68662,6 +68669,17 @@ $(function() {
 				// if the teamCar doesn't exist in the local copy, create it
 				if (typeof vp[vpd[i].uniqueId] == "undefined") {
 					vp[vpd[i].uniqueId] = new teamCar(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}
+			}
+			
+			if (vpd[i].type == "ball") {
+				// if the ball doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new ball(vpd[i]);
 				// if it does exist, update its properties
 				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
 					// update the copy with the latest data
@@ -71021,8 +71039,9 @@ function account() {
 
 
 
-function node(static) {
-	this.static = static;
+function node() {
+	//this.phys = phys.createPhysBody2()();
+	//this.static = static;
 }
 
 function clientControllable() {
@@ -71034,9 +71053,9 @@ function clientControllable() {
 
 
 function character() {
-
+	node.call(this);
 	this.mesh = new THREE.BlendCharacter(world1.t.AH);
-	this.phys;
+	this.phys = phys.createPhysBody2()();
 
 	this.mesh.warpTime = 0.2;
 	this.mesh.animTo = "none";
@@ -71169,6 +71188,11 @@ fn.playerConstructor = function playerConstructor(playerData) {
 		this.mesh.animSpeed = newData.animSpeed;
 	}
 	
+	this.removeSelf = function(world) {
+		world.c.pw.removeBody(this.phys);
+		world.t.scene.remove(this.mesh);
+	}
+	
 	
 	return this;
 }
@@ -71181,16 +71205,25 @@ fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 fn.teamCar = function(data) {
 	character.call(this);
-	this.ph = phys.createVehicleBody();
-	this.phys = this.ph.vehicle.chassisBody;
+	this.ph = new phys.createVehicleBody();
+	this.vehicle = this.ph.vehicle;
+	
+	this.phys = this.vehicle.chassisBody;
+	
+	this.ph.addVehicleToWorld(world1.c.pw);
+	
+	
 	
 	
 	
 	this.updateData = function(newData) {
+		
 		this.phys.position.copy(newData.position);
 		//this.phys.position.lerp(newData.position, 1, this.phys.position);
 		this.phys.quaternion.copy(newData.quaternion);
 		this.phys.velocity.copy(newData.velocity);
+		
+		this.ph.update();
 		
 		//if(world1.game.player.uniqueId !== this.uniqueId) {
 			//var newRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), newData.rotation2.x - Math.PI/2);
@@ -71202,10 +71235,46 @@ fn.teamCar = function(data) {
 		this.mesh.animTo = newData.animTo;
 		this.mesh.animSpeed = newData.animSpeed;*/
 	}
+	
+	this.removeSelf = function(world) {
+		this.ph.removeVehicleFromWorld(world.c.pw);
+		world.c.pw.removeBody(this.phys);
+		world.t.scene.remove(this.mesh);
+	}
+	
 }
 fn.teamCar.prototype = Object.create(character.prototype);
 fn.teamCar.prototype.constructor = fn.teamCar;
 
+
+
+
+
+
+fn.ball = function() {
+	character.call(this);
+	
+	phys.createPhysBody2("sphere")(this.phys, 1000, 5);
+	
+	
+	this.updateData = function(newData) {
+		this.phys.position.copy(newData.position);
+		//this.phys.position.lerp(newData.position, 1, this.phys.position);
+		this.phys.quaternion.copy(newData.quaternion);
+		this.phys.velocity.copy(newData.velocity);
+	}
+	
+	world1.c.pw.addBody(this.phys);// abstract to method later
+	
+	this.removeSelf = function(world) {
+		world.c.pw.removeBody(this.phys);
+		if(typeof(this.mesh) != "undefined") {
+			world.t.scene.remove(this.mesh);
+		}
+	}
+}
+fn.ball.prototype = Object.create(character.prototype);
+fn.ball.prototype.constructor = fn.ball;
 
 
 
@@ -80114,7 +80183,7 @@ module.exports.getSpellInfo = function(spellName) {
 var CANNON = require('cannon');
 var fn = {};
 
-fn.createPhysBody = function createPhysBody(shape, mass) {
+fn.createPhysBody = function createPhysBody(shape) {
 	var createCollider;
 	switch (shape) {
 		case "capsule":
@@ -80143,17 +80212,24 @@ fn.createPhysBody = function createPhysBody(shape, mass) {
 			break;
 
 		case "sphere":
-
+			createCollider = function(mass, radius) {
+				var tempBody = new CANNON.Body({
+					mass: mass
+				});
+				var sphereShape = new CANNON.Sphere(radius);
+				tempBody.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+				return tempBody;
+			};
 			break;
 			
 		default:
 			createCollider = function() {
-				var sphereShape = new CANNON.Sphere(0.001);
+				//var sphereShape = new CANNON.Sphere(0.001);
 				var tempBody = new CANNON.Body({
 					mass: 0
 				});
-				tempBody.addShape(sphereShape, new CANNON.Vec3());
-				tempBody.angularDamping = 1;
+				//tempBody.addShape(sphereShape, new CANNON.Vec3());
+				//tempBody.angularDamping = 1;
 				return tempBody;
 			};
 			break;
@@ -80165,8 +80241,9 @@ fn.createPhysBody = function createPhysBody(shape, mass) {
 
 
 
-
-fn.createPhysBody2 = function createPhysBody(shape) {
+// for when the physics body already exists
+// modifies existing body
+fn.createPhysBody2 = function(shape) {
 	var createCollider;
 	switch (shape) {
 		case "capsule":
@@ -80196,7 +80273,13 @@ fn.createPhysBody2 = function createPhysBody(shape) {
 			break;
 
 		case "sphere":
-
+			createCollider = function(body, mass, radius) {
+				body.mass = mass;
+				body.updateMassProperties();
+				
+				var sphereShape = new CANNON.Sphere(radius);
+				body.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+			};
 			break;
 			
 		default:
@@ -80301,6 +80384,13 @@ fn.createVehicleBody = function() {
 		this.vehicle.addToWorld(physicsWorld);
 		for(var i = 0; i < 4; i++) {
 			physicsWorld.addBody(this.parts.wheels.bodies[i]);
+		}
+	};
+	
+	this.removeVehicleFromWorld = function(physicsWorld) {
+		this.vehicle.removeFromWorld(physicsWorld);
+		for(var i = 0; i < 4; i++) {
+			physicsWorld.removeBody(this.parts.wheels.bodies[i]);
 		}
 	};
 	
