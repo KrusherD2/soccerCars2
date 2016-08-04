@@ -48,12 +48,6 @@ var logReset = 0;
 
 
 
-
-
-
-
-
-
 function gameServer() {
 	// Foward: Y increases, Right: X increases, Up: Z increases
 	//    Z |  / Y
@@ -67,7 +61,7 @@ function gameServer() {
 	this.playersOnline = 0;
 	this.map = [];
 
-	this.worldMap = new terrain.worldMap(this);
+	this.worldMap = new terrain.worldMap(this, "pokemon");
 
 	this.c = {};
 	this.c.pw = new CANNON.World();
@@ -77,6 +71,11 @@ function gameServer() {
 	this.c.pw.solver.iterations = 10;
 	//this.c.pw.defaultContactMaterial.friction = 0.1;
 	//this.c.pw.defaultContactMaterial.restitution = 0;
+	
+	
+	this.valorPoints = 0;
+	this.instinctPoints = 0;
+	this.mysticPoints = 0;
 }
 
 gameServer.prototype.createPhysicsObject = function(phys) {
@@ -87,21 +86,35 @@ gameServer.prototype.createPhysicsObject = function(phys) {
 gameServer.prototype.initScene = function() {
 
 
-	//this.worldMap.set
-
+	//
+	/*
 	for (var i = 0; i < 9; i++) {
 		for (var j = 0; j < 9; j++) {
 			this.worldMap.setZoneByCoord(new THREE.Vector2(i, j));
 		}
 	}
+	*/
+	
+	this.worldMap.setZoneByCoord(new THREE.Vector2(0, 0));
+	
+	var groundShape = new CANNON.Plane();
+	var groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
+	gs.c.pw.add(groundBody);
 	
 	
-	//for(var k = 0; k < 10; k++) {
+	/*for(var k = 0; k < 10; k++) {
 		newBall = new ball();
-		newBall.phys.position.set(Math.random()*100, Math.random()*100, 1000);
-		newBall.phys.velocity.set(1, 0, 0);
+		newBall.phys.position.set(Math.random()*100, Math.random()*100, 100);
 		gs.nodes.push(newBall);
-	//}
+	}*/
+	
+	for(var k = 0; k < 10; k++) {
+		newBall = new teamBall();
+		var rx = Math.random()*10;
+		var ry = Math.random()*10;
+		newBall.phys.position.set(500+rx, 500+ry, 100);
+		gs.nodes.push(newBall);
+	}
 
 
 	//for(var i = 0; i < this.worldMap.allZones.length; i++) {
@@ -118,7 +131,7 @@ gameServer.prototype.initScene = function() {
 };
 
 gameServer.prototype.updatePhysics = function() {
-	this.c.pw.step(1 / 60);
+	this.c.pw.step(1 / 40);
 	for (var i = 0; i < this.c.objects.length; i++) {
 		this.c.object[i].update()
 	}
@@ -294,38 +307,6 @@ node.prototype.update = function() {
 };
 
 
-
-
-
-function ball() {
-	node.call(this);
-	this.type = "ball";
-	//this.radius = 10;// replace with .phys property?
-	
-	//phys.createPhysBody2("sphere")(this.phys, 1000, 10);
-	
-	this.phys = new phys.createPhysBody("sphere")(1000, 10)
-	
-	gs.c.pw.addBody(this.phys);
-	
-
-}
-
-ball.prototype.viewObj = function() {
-	return {
-		uniqueId: this.uniqueId,
-		type: this.type,
-		position: this.phys.position,
-		velocity: this.phys.velocity,
-		quaternion: this.phys.quaternion,
-		//radius: this.radius,
-	};
-};
-
-ball.prototype.update = function() {
-	console.log(this.phys.position);
-	this.setZone();
-};
 
 
 
@@ -744,7 +725,7 @@ function teamCar(owner, characterName, team) {
 
 	this.ph.addVehicleToWorld(gs.c.pw);
 
-	this.phys.position.set(100, 100, 100);
+	this.phys.position.set(500, 500, 100);
 
 
 	this.characterName = characterName;
@@ -769,7 +750,8 @@ teamCar.prototype.constructor = teamCar;
 
 teamCar.prototype.updateOwner = function() {
 	io.to(this.socketId).emit('visibleNodes', {
-		vn: this.visibleNodes
+		vn: this.visibleNodes,
+		scores: [gs.instinctPoints, gs.mysticPoints, gs.valorPoints]
 	});
 };
 
@@ -841,7 +823,7 @@ teamCar.prototype.processInput = function() {
 	}
 
 	if (actions.moveRight) {
-		if (this.temp.currentSteeringValue > this.temp.steerMinMax) {
+		if (this.temp.currentSteeringValue > -this.temp.steerMinMax) {
 			this.temp.currentSteeringValue -= 0.05;
 		} else {
 			this.temp.currentSteeringValue = -this.temp.steerMinMax;
@@ -866,9 +848,122 @@ teamCar.prototype.processInput = function() {
 	if(actions.flip) {
 		this.ph.vehicle.chassisBody.applyLocalImpulse(new CANNON.Vec3(0, 0, -55), new CANNON.Vec3(0, 10, -10));
 	}
-
-
+	
+	if(actions.boost) {
+		this.ph.vehicle.chassisBody.applyLocalImpulse(new CANNON.Vec3(100, 0, 0), new CANNON.Vec3(0, 0, 0));
+	}
 };
+
+
+
+
+
+function ball() {
+	node.call(this);
+	this.type = "ball";
+	//this.radius = 10;// replace with .phys property?
+	
+	phys.createPhysBody2("sphere")(this.phys, 500, 2.75);
+	
+	gs.c.pw.addBody(this.phys);
+	
+
+}
+
+ball.prototype.viewObj = function() {
+	return {
+		uniqueId: this.uniqueId,
+		type: this.type,
+		position: this.phys.position,
+		velocity: this.phys.velocity,
+		quaternion: this.phys.quaternion,
+		//radius: this.radius,
+	};
+};
+
+ball.prototype.update = function() {
+	this.setZone();
+};
+
+
+
+
+function teamBall() {
+	ball.call(this);
+	
+	
+	
+}
+
+teamBall.prototype.respawn = function() {
+	var rx = Math.floor(Math.random() * 21) - 10;
+	var ry = Math.floor(Math.random() * 21) - 10;
+	this.phys.position.set(500+rx, 500+ry, 100)
+};
+
+teamBall.prototype.checkForGoal = function() {
+	var goalLocations = {};
+	goalLocations.valor = new THREE.Vector3(858, 314, 56);
+	goalLocations.mystic = new THREE.Vector3(164, 309, 56);
+	goalLocations.instinct = new THREE.Vector3(858, 314, 56);
+	
+	var position = new THREE.Vector3().copy(this.phys.position);
+	var dist = 10;
+	if(position.distanceTo(goalLocations.instinct) < dist) {
+		gs.instinctPoints += 1;
+		this.respawn();
+	}
+	
+	if(position.distanceTo(goalLocations.mystic) < dist) {
+		gs.mysticPoints += 1;
+		this.respawn();
+	}
+	
+	if(position.distanceTo(goalLocations.valor) < dist) {
+		gs.valorPoints += 1;
+		this.respawn();
+	}
+	
+	
+};
+
+
+teamBall.prototype.update = function() {
+	this.setZone();
+	this.checkForGoal();
+};
+
+
+teamBall.prototype.viewObj = function() {
+	return {
+		uniqueId: this.uniqueId,
+		type: this.type,
+		position: this.phys.position,
+		velocity: this.phys.velocity,
+		quaternion: this.phys.quaternion,
+		//radius: this.radius,
+	};
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1023,8 +1118,6 @@ function loop() {
 	//}
 
 	for (var i = 0; i < gs.nodes.length; i++) {
-		//var tempNode = gs.nodes[i];
-		//tempNode.update();
 		gs.nodes[i].update();
 	}
 
@@ -1037,6 +1130,6 @@ function loop() {
 	} else if (logReset > 200) {
 		logReset = 0;
 	}
-	setTimeout(loop, 1000 / 60);
+	setTimeout(loop, 1000 / 40);
 }
 setTimeout(loop, 100);

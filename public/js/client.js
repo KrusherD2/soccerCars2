@@ -101,6 +101,7 @@ $(function() {
 	preferences.keyboard.layout.moveRight = 68;
 	preferences.keyboard.layout.jump = 32;
 	preferences.keyboard.layout.flip = 82;
+	preferences.keyboard.layout.boost = 16;
 	//preferences.keyboard.layout.castFireball = 49;
 
 	/*preferences.keyboard.layout.activateSpellSlot1 = 49;
@@ -483,6 +484,9 @@ $(function() {
 			case keyboardLayout.flip: //r
 				input.action.flip = state;
 				break;
+			case keyboardLayout.boost: //lshift
+				input.action.boost = state;
+				break;
 			case keyboardLayout.toggleSettingsWindow:
 				if (state) {
 					input.action.toggleSettingsWindow = !input.action.toggleSettingsWindow;
@@ -525,6 +529,7 @@ $(function() {
 			});
 
 		} else {
+			window.team = team;
 			console.log('joining');
 			socket.emit('joinWorld', {
 				characterName: characterName,
@@ -611,13 +616,17 @@ $(function() {
 
 
 		world1.t.AH.onloadFuncs.push(function() {
-			world1.game.player = new teamCar();
+			world1.game.player = new teamCar({team: window.team});
+			
+			
 			
 			//world1.game.player = new playerConstructor();
 			//world1.game.player.setClass("wizard");
 			world1.game.accountName = data.accountName;
 			world1.game.player.characterName = data.characterName;
 			world1.game.player.uniqueId = data.uniqueId;
+			
+			world1.game.visiblePlayers[world1.game.player.uniqueId] = world1.game.player;
 
 			world1.game.connected = true;
 			$("#loadScreen").modal('hide');
@@ -625,9 +634,11 @@ $(function() {
 
 		var fileList = [
 			"assets/models/objects/vehicles/car.json",
-			//"assets/models/characters/players/wizard/final/wizard.json",
-			//"assets/models/environment/trees/animated-tree/final/treeBark.json",
-			//"assets/models/environment/trees/animated-tree/final/treeLeaves.json",
+			"assets/models/objects/props/pokeball/pokeball6.json",
+			"assets/models/characters/pokemon/articuno/articuno.json",
+			"assets/models/objects/vehicles/mysticCar/mysticCar.json",
+			"assets/models/objects/vehicles/instinctCar/instinctCar.json",
+			"assets/models/objects/vehicles/valorCar/valorCar.json"
 		];
 		world1.t.AH.loadAssets(fileList);
 
@@ -649,82 +660,7 @@ $(function() {
 
 
 	socket.on('visibleNodes', function(data) {
-		
-		world1.game.visiblePlayersData = data.vn;// moved here 7-31-16
-		
-		var vp = world1.game.visiblePlayers;
-		var vpd = world1.game.visiblePlayersData;
-		//CHECK FOR DELETED PLAYERS
-		var currentNodes = [];
-		var newNodes = [];
-		for (var i = 0; i < vpd.length; i++) {
-			currentNodes.push(vpd[i].uniqueId);
-		}
-		for (var i = 0; i < data.vn.length; i++) {
-			newNodes.push(data.vn[i].uniqueId);
-		}
-		for (var i = 0; i < currentNodes.length; i++) {
-			if (newNodes.indexOf(currentNodes[i]) == -1) {
-				// replace this with:
-				//vp[currentNodes[i]].removeSelf(world1)
-				//world1.c.pw.removeBody(vp[currentNodes[i]].phys);
-				//world1.t.scene.remove(vp[currentNodes[i]].mesh);
-				vp[currentNodes[i]].removeSelf(world1);
-
-				//world1.t.scene.remove(vp[currentNames[i] + "_label"].label);
-			}
-		}
-		//END OF CHECK
-
-		//world1.game.visiblePlayersData = data.vn;// moved up
-
-		// loop through nodes
-		for (var i = 0; i < vpd.length; i++) {
-			if (!world1.game.connected) {
-				continue;
-			}
-			// called player regardless of client's type
-			if (vpd[i].uniqueId == world1.game.player.uniqueId) {
-				var player = world1.game.player;
-				player.updateData(vpd[i]);
-				continue;
-			}
-			
-			// if its a player type
-			if (vpd[i].type == "player") {
-				// if the player doesn't exist in the local copy, create it
-				if (typeof vp[vpd[i].uniqueId] == "undefined") {
-					vp[vpd[i].uniqueId] = new playerConstructor(vpd[i]);
-				// if it does exist, update its properties
-				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
-					// update the copy with the latest data
-					vp[vpd[i].uniqueId].updateData(vpd[i]);
-				}
-			}
-		
-			// if its a teamCar
-			if (vpd[i].type == "teamCar") {
-				// if the teamCar doesn't exist in the local copy, create it
-				if (typeof vp[vpd[i].uniqueId] == "undefined") {
-					vp[vpd[i].uniqueId] = new teamCar(vpd[i]);
-				// if it does exist, update its properties
-				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
-					// update the copy with the latest data
-					vp[vpd[i].uniqueId].updateData(vpd[i]);
-				}
-			}
-			
-			if (vpd[i].type == "ball") {
-				// if the ball doesn't exist in the local copy, create it
-				if (typeof vp[vpd[i].uniqueId] == "undefined") {
-					vp[vpd[i].uniqueId] = new ball(vpd[i]);
-				// if it does exist, update its properties
-				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
-					// update the copy with the latest data
-					vp[vpd[i].uniqueId].updateData(vpd[i]);
-				}
-			}
-		}
+		world1.updateNodes(data);
 	});
 
 
@@ -760,7 +696,7 @@ $(function() {
 			this.t.raycaster = new THREE.Raycaster();
 
 			this.t.HUD = {};
-			this.t.HUD.items = {};
+			this.t.HUD.objects = {};
 			this.t.HUD.scene = new THREE.Scene();
 			this.t.HUD.camera = new THREE.OrthographicCamera(-this.width / 2, this.width / 2, this.height / 2, -this.height / 2, 1, 1000);
 			this.t.HUD.camera.up.set(0, 0, 1);
@@ -822,6 +758,106 @@ $(function() {
 		this.game.visiblePlayersNames = [];
 		this.game.visiblePlayers = {};
 	}
+	
+	
+	
+	
+	
+	world.prototype.updateNodes = function(data) {
+		/*if(!data) {
+			if(typeof(this.latestData) == "undefined") {
+				return;
+			}
+			data = this.latestData;
+		}
+		this.latestData = data;*/
+		
+		if(!data) {
+			return;
+		}
+		
+		
+		this.game.visiblePlayersData = data.vn;// moved here 7-31-16
+		this.game.scores = data.scores;
+		
+		this.t.HUD.objects.instinctScore.update(data.scores[0]);
+		this.t.HUD.objects.mysticScore.update(data.scores[1]);
+		this.t.HUD.objects.valorScore.update(data.scores[2]);
+		
+		var vp = this.game.visiblePlayers;
+		var vpd = this.game.visiblePlayersData;
+		//CHECK FOR DELETED PLAYERS
+		var currentNodes = [];
+		var newNodes = [];
+		for (var i = 0; i < vpd.length; i++) {
+			currentNodes.push(vpd[i].uniqueId);
+		}
+		for (var i = 0; i < data.vn.length; i++) {
+			newNodes.push(data.vn[i].uniqueId);
+		}
+		for (var i = 0; i < currentNodes.length; i++) {
+			if (newNodes.indexOf(currentNodes[i]) == -1) {
+				// replace this with:
+				//vp[currentNodes[i]].removeSelf(world1)
+				//world1.c.pw.removeBody(vp[currentNodes[i]].phys);
+				//world1.t.scene.remove(vp[currentNodes[i]].mesh);
+				vp[currentNodes[i]].removeSelf(this);
+
+				//world1.t.scene.remove(vp[currentNames[i] + "_label"].label);
+			}
+		}
+		//END OF CHECK
+
+		// loop through nodes
+		for (var i = 0; i < vpd.length; i++) {
+			if (!this.game.connected) {
+				continue;
+			}
+			// called player regardless of client's type
+			if (vpd[i].uniqueId == this.game.player.uniqueId) {
+				var player = this.game.player;
+				player.updateData(vpd[i]);
+				continue;
+			}
+			
+			// if its a player type
+			if (vpd[i].type == "player") {
+				// if the player doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new playerConstructor(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}a
+			}
+		
+			// if its a teamCar
+			if (vpd[i].type == "teamCar") {
+				// if the teamCar doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new teamCar(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}
+			}
+			
+			if (vpd[i].type == "ball") {
+				// if the ball doesn't exist in the local copy, create it
+				if (typeof vp[vpd[i].uniqueId] == "undefined") {
+					vp[vpd[i].uniqueId] = new ball(vpd[i]);
+				// if it does exist, update its properties
+				} else if (typeof vp[vpd[i].uniqueId] != "undefined") {
+					// update the copy with the latest data
+					vp[vpd[i].uniqueId].updateData(vpd[i]);
+				}
+			}
+		}
+	};
+	
+	
 
 	world1 = new world();
 	world1.createCanvas('body', 'canvas');
@@ -831,7 +867,8 @@ $(function() {
 	world1.t.scene.add(ambientLight);
 
 
-	/*window.sky1 = new worldSky();
+	window.sky1 = new worldSky();
+	
 	world1.t.scene.add(sky1.sunSphere);
 	world1.t.scene.add(sky1.light);
 	world1.t.scene.add(sky1.mesh);
@@ -839,13 +876,33 @@ $(function() {
 	setInterval(function() {
 		//world1.t.sky.effectController.inclination += 0.0005;
 		//world1.t.sky.effectController.azimuth += 0.00005;
-		sky1.effectController.azimuth += 0.005;
-		var d = new Date();
-		var n = d.getTime();
-		//world1.t.sky.effectController.azimuth = 0.00005*n;
+		//sky1.effectController.azimuth += 0.0005;
+		
+		// without offset
+		// 0.5-1.5 = light
+		// 1.5-2.5 = dark
+		
+		// with -0.5 offset
+		// 0 - 1 = light
+		// 1 - 2 = dark
+		
+		
+		var secondsInADay = 86400;// 24*60*60
+		var milliSecondsInADay = 86400000;// 24*60*60*1000
+		var date = new Date();
+		var time = date.getTime()
+		var timeInSeconds = Math.round(time/1000);
+		var seconds = (date.getHours()*60*60) + (date.getMinutes()*60) + (date.getSeconds()) * 1000;
+		//var date = new Date(time);
+		var offset = -0.05;
+		
+		var speedOfTime = 60*60;// 60*60 = 1 hour per second
+		percentOfDay = ((time/milliSecondsInADay)*speedOfTime)+offset;
+		
+		sky1.effectController.azimuth = percentOfDay;
 		sky1.update();
 	}, 100);
-	*/
+	
 
 
 
@@ -855,19 +912,28 @@ $(function() {
 
 
 	world1.t.AH.onloadFuncs.push(function() {
-
+		
 		for(var i = 0; i < 1; i++) {
 			for(var j = 0; j < 1; j++) {
 				world1.game.worldMap.setZoneByCoord(new THREE.Vector2(i, j));
 			}
 		}
 		world1.game.worldMap.setZoneByCoord(new THREE.Vector2(0, 0));
-
-		//world1.t.HUD.items.healthBar = new createHealthBar();
-		//world1.t.HUD.items.XPBar = new createXPBar2();
-		//world1.t.HUD.items.levelText = new createLevelText(0);
-		//world1.t.HUD.items.inventory = new createHUDInventory();
-		//world1.t.HUD.items.spellBar = new createSpellBar();
+		
+		
+		window.articuno = new character();
+		window.articuno.loadModel("assets/models/characters/pokemon/articuno/articuno.json");
+		
+		world1.t.HUD.objects.instinctScore = new createScoreText("Instinct", 0, new THREE.Vector2(55, 175));
+		world1.t.HUD.objects.mysticScore = new createScoreText("Mystic", 0, new THREE.Vector2(55, 125));
+		world1.t.HUD.objects.valorScore = new createScoreText("Valor", 0, new THREE.Vector2(55, 75));
+		
+		
+		
+		
+		/*var groundShape = new CANNON.Plane();
+		var groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
+		world1.c.pw.add(groundBody);*/
 
 	});
 
@@ -951,9 +1017,9 @@ $(function() {
 
 		world1.t.HUD.camera.updateProjectionMatrix();
 
-		for (var i in world1.t.HUD.items) {
-			if (typeof world1.t.HUD.items[i].recalc != "undefined") {
-				world1.t.HUD.items[i].recalc();
+		for (var i in world1.t.HUD.objects) {
+			if (typeof world1.t.HUD.objects[i].recalc != "undefined") {
+				world1.t.HUD.objects[i].recalc();
 			}
 		}
 
@@ -972,7 +1038,12 @@ $(function() {
 		isJumping: false,
 		isCasting: false,
 		inputVelocity: new THREE.Vector3(),
+		currentEngineForce: 0,
+		currentSteeringValue: 0,
+		steerMinMax: 0.6,
+		engineForceMinMax: 5000,
 	};
+
 
 	function gameLoop(world) {
 		if (world.game.connected) {
@@ -984,66 +1055,76 @@ $(function() {
 				actions: input.action,
 				data: input.data,
 			});
+			
+			var pPhys = world1.game.player.phys;
+			var pPh = world1.game.player.ph;
+			
+			var actions = input.action;
 
-			if (typeof input.joystick !== "undefined") {
-				if (input.joystick.up()) {
-					input.action.moveForward = true;
-				} else if (input.action.moveForward && !input.joystick.up()) {
-					input.action.moveForward = false;
+			if (actions.moveForward) {
+				if (temp.currentEngineForce < temp.engineForceMinMax) {
+					temp.currentEngineForce += 100;
 				}
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 2);
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 3);
+			}
 
-
-				if (input.joystick.down()) {
-					input.action.moveBackward = true;
-				} else if (input.action.moveBackward && !input.joystick.down()) {
-					input.action.moveBackward = false;
+			if (actions.moveBackward) {
+				if (temp.currentEngineForce > -temp.engineForceMinMax) {
+					temp.currentEngineForce -= 100;
+				} else {
+					temp.currentEngineForce = -temp.engineForceMinMax;
 				}
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 2);
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 3);
+			}
 
-				if (input.joystick.left()) {
-					input.action.moveLeft = true;
-				} else if (input.action.moveLeft && !input.joystick.left()) {
-					input.action.moveLeft = false;
-				}
 
-				if (input.joystick.right()) {
-					input.action.moveRight = true;
-				} else if (input.action.moveRight && !input.joystick.right()) {
-					input.action.moveRight = false;
+			if (actions.moveLeft) {
+				if (temp.currentSteeringValue < temp.steerMinMax) {
+					temp.currentSteeringValue += 0.05;
+				} else {
+					temp.currentSteeringValue = temp.steerMinMax;
 				}
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 0);
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 1);
+			}
+
+			if (actions.moveRight) {
+				if (temp.currentSteeringValue > -temp.steerMinMax) {
+					temp.currentSteeringValue -= 0.05;
+				} else {
+					temp.currentSteeringValue = -temp.steerMinMax;
+				}
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 0);
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 1);
+			}
+
+
+			if (!actions.moveLeft && !actions.moveRight) {
+				temp.currentSteeringValue *= 0.5;
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 0);
+				pPh.vehicle.setSteeringValue(temp.currentSteeringValue, 1);
+			}
+
+			if (!actions.moveForward && !actions.moveBackward) {
+				temp.currentEngineForce *= 0.5;
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 2);
+				pPh.vehicle.applyEngineForce(temp.currentEngineForce, 3);
+			}
+
+			if(actions.flip) {
+				pPh.vehicle.chassisBody.applyLocalImpulse(new CANNON.Vec3(0, 0, -55), new CANNON.Vec3(0, 10, -10));
 			}
 			
-
-			var pMesh = world1.game.player.mesh;
-			var pPhys = world1.game.player.phys;
-
-			var rotation = input.controls.rotation;
-
-			temp.inputVelocity.set(0, 0, 0);
-
-			if (input.action.moveForward) {
-				temp.inputVelocity.x = -20;
+			if(actions.boost) {
+				pPh.vehicle.chassisBody.applyLocalImpulse(new CANNON.Vec3(100, 0, 0), new CANNON.Vec3(100, 0, 0));
 			}
-			if (input.action.moveBackward) {
-				temp.inputVelocity.x = 20;
-			}
-			if (input.action.moveLeft) {
-				temp.inputVelocity.y = -20;
-			}
-			if (input.action.moveRight) {
-				temp.inputVelocity.y = 20;
-			}
-
-			temp.inputVelocity.setLength(20);
-
-			if (!input.action.moveForward && !input.action.moveBackward && temp.isGrounded == true) {
-				var rotatedV = new THREE.Vector3().copy(pPhys.velocity).applyAxisAngle(new THREE.Vector3(0, 0, 1), -rotation.x).multiplyScalar(0.1);
-				temp.inputVelocity.x = -rotatedV.x;
-			}
-			if (!input.action.moveLeft && !input.action.moveRight && temp.isGrounded == true) {
-				var rotatedV = new THREE.Vector3().copy(pPhys.velocity).applyAxisAngle(new THREE.Vector3(0, 0, 1), -rotation.x).multiplyScalar(0.1);
-				temp.inputVelocity.y = -rotatedV.y;
-			}
-
+			
+			
+			
+			
+			
 			/*temp.inputVelocity.applyAxisAngle(new THREE.Vector3(0, 0, 1), rotation.x);
 			if (temp.isGrounded === true) {
 				pPhys.velocity.x = temp.inputVelocity.x;
@@ -1080,7 +1161,7 @@ $(function() {
 
 
 			// fix this later
-			if (!input.mouse.lclick) {
+			/*if (!input.mouse.lclick) {
 				pMesh.rotation.y += Math.PI / 2;
 				input.controls.rotation.x = limit(0, (Math.PI * 2), input.controls.rotation.x, true, true);
 				pMesh.rotation.y = limit(0, (Math.PI * 2), pMesh.rotation.y, true, true);
@@ -1096,7 +1177,7 @@ $(function() {
 					pMesh.rotation.y -= 0.09 * Math.abs(diff); //0.05;
 				}
 				pMesh.rotation.y -= Math.PI / 2;
-			}
+			}*/
 
 
 
@@ -1171,7 +1252,8 @@ $(function() {
 
 
 	function updatePhysics(world) {
-		world.c.pw.step(1 / 60);
+		world.c.pw.step(1 / 40);
+		world.updateNodes();
 		for (var i = 0; i < world.c.objects.length; i++) {
 			world.c.objects[i].update();
 		}
@@ -1190,11 +1272,11 @@ $(function() {
 
 
 	window.requestAnimFrame = (function() {
-		return window.requestAnimationFrame ||
+		/*return window.requestAnimationFrame ||
 			window.webkitRequestAnimationFrame ||
-			window.mozRequestAnimationFrame ||
-			function(callback) {
-				window.setTimeout(callback, 1000 / 60);
+			window.mozRequestAnimationFrame ||*/
+			return function(callback) {
+				window.setTimeout(callback, 1000 / 40);
 			};
 	})();
 

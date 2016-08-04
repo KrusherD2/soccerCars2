@@ -194,9 +194,11 @@ exports.zone = function(worldMap, column, row) {//fill in paramater for heightma
 
 
 
-exports.worldMap = function(gameServer) {
+exports.worldMap = function(gameServer, worldName) {
 	//var scope = this;
 	this.gameServer = gameServer;
+	
+	this.worldName = worldName || "world1";
 	
 	this.rows = 10;
 	this.columns = 10;
@@ -241,7 +243,7 @@ exports.worldMap = function(gameServer) {
 		var tempZone = scope.findZoneByAbsoluteCoordinates(position);
 		var pos = tempZone.coordPosition;
 		var coords = new THREE.Vector2(9-pos.y, pos.x);
-		var heightmapURL = "public/assets/worldMap/world1/heightmap/heightmap"+coords.x+coords.y+".png";
+		var heightmapURL = "public/assets/worldMap/"+this.worldName+"/heightmap/heightmap"+coords.x+coords.y+".png";
 		tempZone.setPhys(heightmapURL);
 	}
 	
@@ -250,7 +252,7 @@ exports.worldMap = function(gameServer) {
 		//var pos = tempZone.coordPosition;
 		var tempZone = this.zones[position.x][position.y];
 		var coords = new THREE.Vector2(9-position.y, position.x);
-		var heightmapURL = "public/assets/worldMap/world1/heightmap/heightmap"+coords.x+coords.y+".png";
+		var heightmapURL = "public/assets/worldMap/"+this.worldName+"/heightmap/heightmap"+coords.x+coords.y+".png";
 		tempZone.setPhys(heightmapURL);
 	}
 	

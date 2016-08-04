@@ -71,6 +71,7 @@ fn.createPhysBody2 = function(shape) {
 				
 				body.mass = mass;
 				body.updateMassProperties();
+				body.type = 1;
 
 				// CHANGE LATER
 				if (!isRotated || isRotated) {
@@ -81,7 +82,7 @@ fn.createPhysBody2 = function(shape) {
 				} else if (isRotated) {
 					// TODO
 				}
-
+				
 				body.angularDamping = 1;
 				//return tempBody;
 			};
@@ -94,9 +95,15 @@ fn.createPhysBody2 = function(shape) {
 			createCollider = function(body, mass, radius) {
 				body.mass = mass;
 				body.updateMassProperties();
+				body.type = 1;
 				
 				var sphereShape = new CANNON.Sphere(radius);
 				body.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+				
+				//body.updateMassProperties();
+				//body.updateBoundingRadius();
+				//body.aabbNeedsUpdate = true;
+				
 			};
 			break;
 			
@@ -126,7 +133,7 @@ fn.createVehicleBody = function() {
 	this.parts.wheels = {};
 	this.parts.wheels.bodies = [];
 	this.parts.wheels.meshes = [];
-	this.parts.chassis.body = new CANNON.Body({mass:800.0});;
+	this.parts.chassis.body = new CANNON.Body({mass:1200.0});;
 	var chassisShape = new CANNON.Box(new CANNON.Vec3(1, 2, 0.4));
 	this.parts.chassis.body.addShape(chassisShape, new CANNON.Vec3(0, 0, 0));
 

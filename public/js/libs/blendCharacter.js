@@ -40,7 +40,7 @@ THREE.BlendCharacter = function(assetHolder) {
 			this.isLoading = true;
 		}
 		
-		switch(url) {
+		/*switch(url) {
 			case "car":
 				url = "assets/models/objects/vehicles/car.json";
 			case "treeLeaves":
@@ -49,7 +49,7 @@ THREE.BlendCharacter = function(assetHolder) {
 			case "treeBark":
 				url = "assets/models/enviroment/trees/animated-tree/final/treeBark.json";
 				break;
-		}
+		}*/
 		
 		var scope = this;
 		
@@ -64,13 +64,22 @@ THREE.BlendCharacter = function(assetHolder) {
 		scope.originalMaterial = originalMaterial;
 		originalMaterial.skinning = true;
 		THREE.SkinnedMesh.call(scope, geometry, originalMaterial);*/
+		
+		if(typeof(materials) !== "undefined") {
 
-		materials.forEach(function(material) {
-			material.skinning = true;
-		});
-		THREE.SkinnedMesh.call(scope, geometry, new THREE.MeshFaceMaterial(materials));
+			materials.forEach(function(material) {
+				material.skinning = true;
+			});
+			THREE.SkinnedMesh.call(scope, geometry, new THREE.MeshFaceMaterial(materials));
+		
+		}
 		
 		scope.mixer = new THREE.AnimationMixer(scope);
+		
+		//console.log(geometry);
+		if(typeof(geometry.animation == "undefined")) {
+			geometry.animations = [];
+		}
 		
 		for (var i = 0; i < geometry.animations.length; ++i) {
 			scope.mixer.clipAction(geometry.animations[i]);

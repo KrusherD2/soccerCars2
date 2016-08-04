@@ -685,7 +685,52 @@ fn.createXPBar2 = function createXPBar2(radius, xPos, yPos, barLength) {
 
 
 
+fn.createScoreText = function(team, score, position) {
+	if (!score) {
+		score = -1;
+	}
 
+	var levelObj = {};
+	levelObj.update = function(score) {
+		if (score != this.currentScore) {
+			this.currentScore = score;
+			world1.t.HUD.scene.remove(this.mesh);
+			this.mesh = new makeTextSprite(team + ": " + levelObj.currentScore);
+
+			var pos = {};
+			pos.x = (-window.innerWidth / 2) + this.xPos + this.mesh.textWidth;
+			pos.y = (-window.innerHeight / 2) + this.yPos;
+			this.mesh.position.set(pos.x, pos.y, 0);
+			this.mesh.scale.set(20, 20, 1);
+			world1.t.HUD.scene.add(this.mesh);
+		}
+	};
+
+	levelObj.recalc = function() {
+		var pos = {};
+		pos.x = (-window.innerWidth / 2) + this.xPos + this.mesh.textWidth;
+		pos.y = (-window.innerHeight / 2) + this.yPos;
+		this.mesh.position.set(pos.x, pos.y, 0);
+	};
+
+
+
+	levelObj.xPos = position.x || 55;
+	levelObj.yPos = position.y || 75;
+
+	levelObj.currentScore = score;
+	levelObj.mesh = new makeTextSprite(team + ": " + levelObj.currentScore);
+
+	var pos = {};
+	pos.x = (-window.innerWidth / 2) + levelObj.xPos + levelObj.mesh.textWidth;
+	pos.y = (-window.innerHeight / 2) + levelObj.yPos;
+	levelObj.mesh.position.set(pos.x, pos.y, 0);
+	//levelObj.mesh.position.set(0, 0, 0);
+	levelObj.mesh.scale.set(20, 20, 1);
+
+	world1.t.HUD.scene.add(levelObj.mesh);
+	return levelObj;
+}
 
 
 
@@ -970,6 +1015,10 @@ fn.test2 = function(ctx) {
 
 
 
+
+
+
+
 var sprite;
 fn.test1 = function() {
 	var canvas = document.createElement('canvas');
@@ -979,7 +1028,7 @@ fn.test1 = function() {
 	context.fillStyle = "#000000";
 	context.lineWidth = 15;
 	
-	fn.test2(context);
+	fn.test3(context);
 	
 	var texture = new THREE.Texture(canvas);
 	texture.minFilter = THREE.LinearFilter;
@@ -1405,8 +1454,8 @@ function fromHeightmap2(heightmap, options) {
 
 fn.physicsFromHeightmap = function physicsFromHeightmap(heightmapSrc, callback) {
 	var options = {};
-	options.xSegments = 128;
-	options.ySegments = 128;
+	options.xSegments = 256;
+	options.ySegments = 256;
 	options.xSize = 1024;
 	options.ySize = 1024;
 	options.minHeight = 0;
@@ -1753,10 +1802,11 @@ fn.zone = function(worldMap, column, row) {//fill in paramater for heightmap url
 
 
 
-fn.worldMap = function(world) {
+fn.worldMap = function(world, worldName) {
 	var scope = this;
 	
 	this.world = world;
+	this.worldName = worldName || "pokemon";
 	
 	this.rows = 10;
 	this.columns = 10;
@@ -1789,8 +1839,8 @@ fn.worldMap = function(world) {
 		var tempZone = scope.findZoneByAbsoluteCoordinates(position);
 		var pos = tempZone.coordPosition;
 		var coords = new THREE.Vector2(9-pos.y, pos.x);
-		var heightmapURL = "assets/worldMap/world1/heightmap/heightmap"+coords.x+coords.y+".png";
-		var textureURL = "assets/worldMap/world1/texture/texture"+coords.x+coords.y+".png";
+		var heightmapURL = "assets/worldMap/"+this.worldName+"/heightmap/heightmap"+coords.x+coords.y+".png";
+		var textureURL = "assets/worldMap/"+this.worldName+"/texture/texture"+coords.x+coords.y+".png";
 		tempZone.setMeshPhysTex(heightmapURL, textureURL);
 	}
 	
@@ -1799,8 +1849,8 @@ fn.worldMap = function(world) {
 		//var pos = tempZone.coordPosition;
 		var tempZone = scope.zones[position.x][position.y];
 		var coords = new THREE.Vector2(9-position.y, position.x);
-		var heightmapURL = "assets/worldMap/world1/heightmap/heightmap"+coords.x+coords.y+".png";
-		var textureURL = "assets/worldMap/world1/texture/texture"+coords.x+coords.y+".png";
+		var heightmapURL = "assets/worldMap/"+this.worldName+"/heightmap/heightmap"+coords.x+coords.y+".png";
+		var textureURL = "assets/worldMap/"+this.worldName+"/texture/texture"+coords.x+coords.y+".png";
 		tempZone.setMeshPhysTex(heightmapURL, textureURL);
 	}
 	
@@ -1870,7 +1920,7 @@ function clientControllable() {
 
 
 
-function character() {
+fn.character = function() {
 	node.call(this);
 	this.mesh = new THREE.BlendCharacter(world1.t.AH);
 	this.phys = phys.createPhysBody2()();
@@ -1879,8 +1929,10 @@ function character() {
 	this.mesh.animTo = "none";
 	this.mesh.animPlaying = "none";
 	this.mesh.animSpeed = 1;
+	this.mesh.copyRotation = false;
 	// add reference to this object
 	this.mesh.nodeObject = this;
+	
 
 	this.loadModel = function(name, scale) {
 		this.mesh.loadFast(name);
@@ -1897,9 +1949,9 @@ function character() {
 		}
 		world1.c.objects.push(this);
 		world1.t.scene.add(this.mesh);
-		if(this.phys) {
+		/*if(this.phys) {
 			world1.c.pw.addBody(this.phys);
-		}
+		}*/
 	};
 	
 	
@@ -1912,13 +1964,18 @@ function character() {
 		var net = new THREE.Vector3().copy(this.phys.position).add(this.mesh.meshOffset);
 		
 		this.mesh.position.copy(net);
+		
+		if(this.mesh.copyRotation) {
+			this.mesh.quaternion.copy(this.phys.quaternion);
+		}
+		
 
 		if (this.mesh.animPlaying == "none") {
 			this.mesh.animTo = "idle";
 			this.mesh.animPlaying = "idle";
 			//this.mesh.warpTime = 0.2;
 			//this.mesh.updateSpeed = 0.02;
-			this.mesh.play(this.mesh.animTo);
+			//this.mesh.play(this.mesh.animTo);
 		}
 		/*if (this.mesh.animTo2) {
 			this.mesh.warp(this.mesh.animPlaying, this.mesh.animTo2, this.mesh.warpTime);
@@ -1938,7 +1995,7 @@ function character() {
 
 
 fn.playerConstructor = function playerConstructor(playerData) {
-	character.call(this);
+	fn.character.call(this);
 	this.type = "player";
 	this.mesh.meshOffset = new THREE.Vector3(0, 0, -2);
 	this.phys = phys.createPhysBody("capsule")(5, 1, 3.2);
@@ -2014,7 +2071,7 @@ fn.playerConstructor = function playerConstructor(playerData) {
 	
 	return this;
 }
-fn.playerConstructor.prototype = Object.create(character.prototype);
+fn.playerConstructor.prototype = Object.create(fn.character.prototype);
 fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 
@@ -2022,7 +2079,7 @@ fn.playerConstructor.prototype.constructor = fn.playerConstructor;
 
 
 fn.teamCar = function(data) {
-	character.call(this);
+	fn.character.call(this);
 	this.ph = new phys.createVehicleBody();
 	this.vehicle = this.ph.vehicle;
 	
@@ -2030,14 +2087,28 @@ fn.teamCar = function(data) {
 	
 	this.ph.addVehicleToWorld(world1.c.pw);
 	
+	this.mesh.copyRotation = true;
+	if(data.team == "mystic") {
+		this.loadModel("assets/models/objects/vehicles/mysticCar/mysticCar.json");
+	}
+	if(data.team == "instinct") {
+		this.loadModel("assets/models/objects/vehicles/instinctCar/instinctCar.json");
+	}
+	if(data.team == "valor") {
+		this.loadModel("assets/models/objects/vehicles/valorCar/valorCar.json");
+	}
+	
+	//this.loadModel("assets/models/characters/pokemon/articuno/articuno.json")
+	//this.loadModel("assets/models/characters/pokemon/articuno/articuno3.json");
 	
 	
 	
+	world1.c.objects.push(this);
 	
 	this.updateData = function(newData) {
 		
-		this.phys.position.copy(newData.position);
-		//this.phys.position.lerp(newData.position, 1, this.phys.position);
+		//this.phys.position.copy(newData.position);
+		this.phys.position.lerp(newData.position, 0.4, this.phys.position);
 		this.phys.quaternion.copy(newData.quaternion);
 		this.phys.velocity.copy(newData.velocity);
 		
@@ -2061,7 +2132,7 @@ fn.teamCar = function(data) {
 	}
 	
 }
-fn.teamCar.prototype = Object.create(character.prototype);
+fn.teamCar.prototype = Object.create(fn.character.prototype);
 fn.teamCar.prototype.constructor = fn.teamCar;
 
 
@@ -2072,7 +2143,10 @@ fn.teamCar.prototype.constructor = fn.teamCar;
 fn.ball = function() {
 	character.call(this);
 	
-	phys.createPhysBody2("sphere")(this.phys, 1000, 5);
+	phys.createPhysBody2("sphere")(this.phys, 500, 2.75);
+	
+	this.mesh.copyRotation = true;
+	this.loadModel("assets/models/objects/props/pokeball/pokeball6.json", new THREE.Vector3(1, 1, 1));
 	
 	
 	this.updateData = function(newData) {
@@ -2091,7 +2165,7 @@ fn.ball = function() {
 		}
 	}
 }
-fn.ball.prototype = Object.create(character.prototype);
+fn.ball.prototype = Object.create(fn.character.prototype);
 fn.ball.prototype.constructor = fn.ball;
 
 
