@@ -764,17 +764,17 @@ $(function() {
 	
 	
 	world.prototype.updateNodes = function(data) {
-		/*if(!data) {
+		if(!data) {
 			if(typeof(this.latestData) == "undefined") {
 				return;
 			}
 			data = this.latestData;
 		}
-		this.latestData = data;*/
+		this.latestData = data;
 		
-		if(!data) {
+		/*if(!data) {
 			return;
-		}
+		}*/
 		
 		
 		this.game.visiblePlayersData = data.vn;// moved here 7-31-16

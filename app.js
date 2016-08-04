@@ -908,7 +908,7 @@ teamBall.prototype.checkForGoal = function() {
 	goalLocations.instinct = new THREE.Vector3(858, 314, 56);
 	
 	var position = new THREE.Vector3().copy(this.phys.position);
-	var dist = 10;
+	var dist = 15;
 	if(position.distanceTo(goalLocations.instinct) < dist) {
 		gs.instinctPoints += 1;
 		this.respawn();
